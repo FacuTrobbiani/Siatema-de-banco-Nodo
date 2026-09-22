@@ -247,7 +247,7 @@
 
   /* Header */
   .header        { padding: 10px 14px; border-radius: var(--r); }
-  #userName      { display: none; }
+  .header-greeting { font-size: 0.92rem; }
   .user-chevron  { display: none; }
   .user-trigger  { gap: 6px; padding: 4px 6px; }
   .user-dropdown { width: min(92vw, 310px); right: -8px; max-height: 78vh; }

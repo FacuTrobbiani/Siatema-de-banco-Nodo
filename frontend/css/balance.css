@@ -3,7 +3,7 @@
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   background: var(--surface);
   padding: 12px 20px;
@@ -13,9 +13,28 @@
   z-index: 10;
 }
 
-.header-user { display: flex; align-items: center; gap: 12px; }
+.header-left,
+.header-user { display: flex; align-items: center; }
 
-#userName { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+.header-left { gap: 12px; }
+.header-user { gap: 12px; }
+
+.header-greeting {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.header-greeting > span { display: inline-block; }
+
+#userName { font-weight: 700; color: var(--green-2); }
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+}
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    BALANCE HERO

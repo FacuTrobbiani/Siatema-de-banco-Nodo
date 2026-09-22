@@ -12,6 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const aliasModal        = document.getElementById("aliasModal");
   const perfilModal       = document.getElementById("perfilModal");
   const passwordModal     = document.getElementById("passwordModal");
+  const perfilTelefono    = document.getElementById("perfilTelefono");
+
+  perfilTelefono?.addEventListener("input", () => {
+    perfilTelefono.value = perfilTelefono.value.replace(/\D/g, "").slice(0, 12);
+  });
 
   // Cargar datos del perfil
   if (loadPerfilBtn) {

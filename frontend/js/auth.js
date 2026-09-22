@@ -46,6 +46,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      const loginError = document.getElementById("loginError");
+      loginError?.classList.add("hidden");
       formLoad(loginForm, true);
       try {
         const data = await apiFetch("/auth/login", {
@@ -61,7 +63,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         sessionStorage.setItem("justLoggedIn", "1");
         window.location.href = "dashboard.html";
       } catch (error) {
-        showToast(error.message || "Credenciales incorrectas", 4000, "error");
+        const isInvalidCredentials = /invalid login credentials|credenciales inválidas|email no confirmado/i.test(error.message || "");
+        const message = isInvalidCredentials ? "Contraseña o correo inválidos" : (error.message || "Contraseña o correo inválidos");
+        if (loginError) {
+          loginError.textContent = message;
+          loginError.classList.remove("hidden");
+        }
+        showToast(message, 4000, "error");
         formLoad(loginForm, false);
       }
     });

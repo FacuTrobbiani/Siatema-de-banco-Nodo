@@ -156,7 +156,7 @@ const login = async (req, res) => {
       // Manejo de errores específicos de configuración de Supabase
       let customMessage = error.message;
       if (error.message === "Invalid login credentials") {
-        customMessage = "Credenciales inválidas o email no confirmado";
+        customMessage = "Contraseña o correo inválidos";
       } else if (error.message === "Email logins are disabled") {
         customMessage = "El inicio de sesión por Email está desactivado en la configuración de Supabase";
       }

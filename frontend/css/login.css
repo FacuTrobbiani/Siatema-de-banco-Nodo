@@ -469,5 +469,14 @@ button:active { transform: translateY(0); }
   margin-bottom: 4px;
 }
 
+.login-error {
+  color: #dc2626;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: -2px 0 2px;
+}
+
+[data-theme="dark"] .login-error { color: #f87171; }
+
 .login-footer { margin-top: 28px; color: var(--text-3); font-size: 0.75rem; text-align: center; }
 

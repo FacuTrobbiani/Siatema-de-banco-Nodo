@@ -136,6 +136,8 @@
   border-radius: var(--r-sm);
 }
 
+.header-greeting { cursor: default; }
+
 .user-chevron {
   font-size: 0.68rem;
   color: var(--text-3);
