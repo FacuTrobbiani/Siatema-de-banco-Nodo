@@ -19,7 +19,7 @@
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
-.btn-card-data-toggle:hover { background: var(--green-dim); color: var(--green-2); border-color: rgba(16,185,129,0.3); opacity: 1; transform: none; }
+.btn-card-data-toggle:hover { background: var(--green-dim); color: var(--green-2); border-color: rgba(6,182,212,0.3); opacity: 1; transform: none; }
 .btn-card-data-toggle.unlocked { border-color: var(--green); color: var(--green-2); }
 .btn-card-data-toggle i { font-size: 0.72rem; }
 
@@ -105,7 +105,7 @@
   border-radius: 20px;
 }
 
-.card-status-badge.active  { background: rgba(16,185,129,0.12); color: var(--green); }
+.card-status-badge.active  { background: rgba(6,182,212,0.12); color: var(--green); }
 .card-status-badge.blocked { background: rgba(239,68,68,0.12);  color: #ef4444; }
 
 .card-controls {
@@ -123,12 +123,12 @@
 }
 
 .btn-card-ver-datos {
-  background: rgba(16,185,129,.08);
-  border-color: rgba(16,185,129,.3);
-  color: #34d399;
+  background: rgba(6,182,212,.08);
+  border-color: rgba(6,182,212,.3);
+  color: #22D3EE;
 }
-.btn-card-ver-datos:hover { background: rgba(16,185,129,.18); border-color: rgba(16,185,129,.5); color: #34d399; opacity: 1; transform: none; }
-.btn-card-ver-datos.unlocked { background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.5); }
+.btn-card-ver-datos:hover { background: rgba(6,182,212,.18); border-color: rgba(6,182,212,.5); color: #22D3EE; opacity: 1; transform: none; }
+.btn-card-ver-datos.unlocked { background: rgba(6,182,212,.15); border-color: rgba(6,182,212,.5); }
 
 .btn-card-bloquear { color: #fb7185; }
 .btn-card-bloquear:hover { background: rgba(251,113,133,.1); border-color: rgba(251,113,133,.35); color: #fb7185; opacity: 1; transform: none; }
@@ -162,26 +162,75 @@
 .btn-card-cancel { border-color: rgba(239,68,68,0.4); color: #ef4444; background: rgba(239,68,68,0.06); }
 .btn-card-cancel:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-/* "Dar de baja" â€” relegado al panel de datos */
+/* “Dar de baja” — botón discreto debajo del panel */
 .card-data-baja-wrap {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-  text-align: right;
+  margin-top: 10px;
+  text-align: center;
 }
 .card-data-baja-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
+  color: var(--text-3);
+  font-size: 0.75rem;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 6px 10px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: color .15s;
+  gap: 5px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
 }
-.card-data-baja-btn:hover { color: #ef4444; }
+.card-data-baja-btn:hover { color: #ef4444; background: rgba(239,68,68,.07); }
+
+/* Toggle tabs del modal de pago */
+.pay-tab-toggle {
+  display: flex;
+  background: rgba(15,23,42,.6);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+}
+.pay-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 7px;
+  font-size: .83rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-2);
+  transition: background .18s, color .18s;
+}
+.pay-tab-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+[data-theme="light"] .pay-tab-toggle { background: var(--bg); }
+[data-theme="light"] .pay-tab-btn.active { box-shadow: var(--sh-sm); }
+
+/* Input monto con prefijo $ */
+.pay-amount-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pay-amount-prefix {
+  position: absolute;
+  left: 12px;
+  color: var(--text-3);
+  font-weight: 600;
+  font-size: .9rem;
+  pointer-events: none;
+  z-index: 1;
+}
+.pay-amount-input {
+  width: 100%;
+  padding-left: 26px !important;
+}
 
 .cancel-card-confirm {
   margin-top: 12px;
@@ -197,8 +246,65 @@
 
 [data-theme="dark"] .btn-card-ctrl { background: rgba(255,255,255,0.04); }
 
+@media (max-width: 720px) {
+  .card-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  /* Los 3 botones: exactamente el mismo alto y padding */
+  .btn-card-ctrl {
+    flex: none;
+    width: 100%;
+    height: 40px;
+    min-height: unset;
+    padding: 0 4px;
+    font-size: 0.72rem;
+    gap: 4px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Neutralizar las diferencias visuales de Pagar en mobile */
+  .btn-card-pay {
+    background: rgba(6,182,212,.08);
+    border-color: rgba(6,182,212,.35);
+  }
+  .card-data-baja-btn {
+    background: transparent;
+    border: none;
+    color: #f87171;
+    font-size: 0.78rem;
+    padding: 8px 12px;
+    margin-top: 4px;
+    width: 100%;
+    justify-content: center;
+  }
+  .card-data-baja-wrap {
+    background: transparent;
+    text-align: center;
+    margin-top: 8px;
+  }
+}
+
 .card-tx-section { margin-top: 20px; }
 .card-tx-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin-bottom: 10px; }
+
+.card-tx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 16px;
+  list-style: none;
+  color: var(--text-3);
+  text-align: center;
+}
+.card-tx-empty i { font-size: 1.8rem; opacity: 0.5; }
+.card-tx-empty span { font-size: 0.82rem; }
 
 .card-visa-network {
   font-family: 'Montserrat', sans-serif;
@@ -262,7 +368,7 @@
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--green), rgba(16,185,129,0.25), transparent);
+  background: linear-gradient(90deg, var(--green), rgba(6,182,212,0.25), transparent);
   border-radius: 0 0 16px 16px;
 }
 

@@ -51,7 +51,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     if (loadMovimientosBtn) loadMovimientosBtn.click();
 
-    // Polling automático cada 15 min para no perder transferencias
+    // Polling: refrescar movimientos cada 45 s (solo BD local, sin Banco Central)
+    setInterval(() => {
+      if (loadMovimientosBtn) loadMovimientosBtn.click();
+    }, 45 * 1000);
+
+    // Polling de sincronización con Banco Central cada 5 min
     setInterval(async () => {
       try {
         const data = await apiFetch("/transferencias/sincronizar");
@@ -62,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           showToast(`${n} transferencia${n > 1 ? "s" : ""} recibida${n > 1 ? "s" : ""}`);
         }
       } catch {}
-    }, 15 * 60 * 1000);
+    }, 5 * 60 * 1000);
   }
 
   // ── Avatar ──
@@ -70,23 +75,52 @@ document.addEventListener("DOMContentLoaded", async () => {
   const avatarImg   = document.getElementById("avatarImg");
   const avatarIcon  = document.getElementById("avatarIcon");
   const avatarKey   = session?.user?.id ? `userAvatar_${session.user.id}` : null;
-  const savedAvatar = avatarKey ? localStorage.getItem(avatarKey) : null;
-  if (savedAvatar && avatarImg) {
-    avatarImg.src = savedAvatar;
-    avatarImg.classList.remove("hidden");
-    if (avatarIcon) avatarIcon.classList.add("hidden");
-  }
-  avatarInput?.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target.result;
-      if (avatarKey) localStorage.setItem(avatarKey, dataUrl);
-      if (avatarImg) { avatarImg.src = dataUrl; avatarImg.classList.remove("hidden"); }
-      if (avatarIcon) avatarIcon.classList.add("hidden");
+
+  const applyAvatar = (dataUrl) => {
+    [avatarImg, document.getElementById("avatarImgDrop")].forEach(img => {
+      if (!img) return;
+      img.src = dataUrl;
+      img.classList.remove("hidden");
+    });
+    avatarIcon?.classList.add("hidden");
+    document.getElementById("avatarInitialsDrop")?.classList.add("hidden");
+  };
+
+  // Foto del celular (varios MB) → recorte cuadrado 256px JPEG para que entre en localStorage
+  const resizeAvatar = (file) => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      canvas.getContext("2d").drawImage(
+        img,
+        (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side,
+        0, 0, 256, 256
+      );
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagen inválida")); };
+    img.src = url;
+  });
+
+  const savedAvatar = avatarKey ? localStorage.getItem(avatarKey) : null;
+  if (savedAvatar) applyAvatar(savedAvatar);
+
+  avatarInput?.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const dataUrl = await resizeAvatar(file);
+      applyAvatar(dataUrl);
+      if (avatarKey) localStorage.setItem(avatarKey, dataUrl);
+      if (typeof showToast === "function") showToast("Foto de perfil actualizada", 2500, "success");
+    } catch {
+      if (typeof showToast === "function") showToast("No se pudo cargar la imagen", 3500, "error");
+    }
   });
 
   // ── Navegación sidebar ──
@@ -110,4 +144,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     e.preventDefault();
     document.querySelector("[data-section=\"prestamos\"]")?.click();
   });
+
+  // ── User dropdown: toggle por click (necesario en mobile donde no hay hover) ──
+  const _userMenu    = document.querySelector(".user-menu");
+  const _userTrigger = document.querySelector(".user-trigger");
+  if (_userMenu && _userTrigger) {
+    _userTrigger.addEventListener("click", (e) => {
+      // No propagar si tocaron directamente la cámara (por si acaso en desktop)
+      if (e.target.closest(".avatar-edit-btn")) return;
+      _userMenu.classList.toggle("open");
+    });
+    // Cerrar al hacer click fuera
+    document.addEventListener("click", (e) => {
+      if (!_userMenu.contains(e.target)) _userMenu.classList.remove("open");
+    });
+  }
 });

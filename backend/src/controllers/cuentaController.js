@@ -227,8 +227,14 @@ const convertirMoneda = async (req, res) => {
       const origen = origenResult.rows[0];
       const dest   = destResult.rows[0];
 
-      if (!origen) return res.status(404).json({ message: `No tenés cuenta en ${de}` });
-      if (!dest)   return res.status(404).json({ message: `No tenés cuenta en ${a}. Abrila primero.` });
+      if (!origen) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ message: `No tenés cuenta en ${de}` });
+      }
+      if (!dest) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ message: `No tenés cuenta en ${a}. Abrila primero.` });
+      }
 
       const debitado  = de === 'ARS' ? arsAmount : usdAmount;
       const acreditado = a  === 'ARS' ? arsAmount : usdAmount;
@@ -473,12 +479,11 @@ const recargarCelular = async (req, res) => {
     await client.query("UPDATE cuentas SET saldo = $1 WHERE id = $2", [nuevoSaldo, cuenta.id]);
 
     const comprobante = `REC-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
-    const descripcion = `Recarga ${operador} - ${cleanPhone}`;
 
     await client.query(
       `INSERT INTO movimientos (cuenta_id, tipo, monto, descripcion, saldo_anterior, saldo_posterior)
        VALUES ($1, 'debito', $2, $3, $4, $5)`,
-      [cuenta.id, montoNumero, descripcion, saldoActual, nuevoSaldo]
+      [cuenta.id, montoNumero, `Recarga ${operador} - ${cleanPhone}`, saldoActual, nuevoSaldo]
     );
 
     await client.query("COMMIT");

@@ -1,4 +1,4 @@
-﻿const getCuentaLabel = (cuenta) => cuenta.nombre_cuenta || `Cuenta ${cuenta.id || cuenta.numero_cuenta || ""}`.trim();
+const getCuentaLabel = (cuenta) => cuenta.nombre_cuenta || `Cuenta ${cuenta.id || cuenta.numero_cuenta || ""}`.trim();
 
 const getCuentaCbu = (cuenta) => cuenta.cbu || cuenta.CBU || "No disponible";
 
@@ -26,7 +26,7 @@ const animarSaldo = (anterior, nuevo) => {
   const easeOut = t => t * (2 - t);
 
   display.classList.remove('balance-flash-up', 'balance-flash-down');
-  void display.offsetWidth; // fuerza reflow para reiniciar animaciÃ³n CSS
+  void display.offsetWidth; // fuerza reflow para reiniciar animación CSS
   display.classList.add(diff >= 0 ? 'balance-flash-up' : 'balance-flash-down');
 
   const step = (ahora) => {
@@ -49,10 +49,11 @@ const loadSaldo = async () => {
     if (saldoList) saldoList.innerHTML = cuentas.map(renderCuentaSaldo).join("");
     if (setOutput) setOutput(cuentas);
     
-    if (cuentas.length > 0) {
-      cuentaActiva = cuentas[0];
+    const cuentaARS = cuentas.find(c => c.moneda === 'ARS') || cuentas[0];
+    if (cuentaARS) {
+      cuentaActiva = cuentaARS;
       const anterior = saldoActual;
-      saldoActual = cuentas[0].saldo;
+      saldoActual = cuentaARS.saldo;
 
       const icon = document.getElementById("balanceIcon");
       if (icon) icon.className = saldoOculto ? "fas fa-eye" : "fas fa-eye-slash";
@@ -62,7 +63,7 @@ const loadSaldo = async () => {
       } else {
         actualizarDisplaySaldo();
       }
-      // Notificar al módulo de préstamos para que recalcule el límite con el saldo real
+      // Notificar al m�dulo de pr�stamos para que recalcule el l�mite con el saldo real
       if (typeof _actualizarLimitePrestamos === "function") _actualizarLimitePrestamos(saldoActual);
 
       const cbuVal   = getCuentaCbu(cuentaActiva);
@@ -70,10 +71,14 @@ const loadSaldo = async () => {
 
       const displayCbuEl   = document.getElementById('displayCbu');
       const displayAliasEl = document.getElementById('displayAlias');
-      if (displayCbuEl)   { displayCbuEl.textContent   = cbuVal   || 'â€”'; displayCbuEl.dataset.value   = cbuVal;   }
-      if (displayAliasEl) { displayAliasEl.textContent = aliasVal || 'â€”'; displayAliasEl.dataset.value = aliasVal; }
+      if (displayCbuEl)   { displayCbuEl.textContent   = cbuVal   || '—'; displayCbuEl.dataset.value   = cbuVal;   }
+      if (displayAliasEl) { displayAliasEl.textContent = aliasVal || '—'; displayAliasEl.dataset.value = aliasVal; }
 
-      // Actualizar secciÃ³n USD
+      // Refrescar alias en el dropdown de perfil
+      const aliasValEl = document.getElementById('udropAliasVal');
+      if (aliasValEl) aliasValEl.textContent = aliasVal || '—';
+
+      // Actualizar sección USD
       const cuentaUSD = cuentas.find(c => c.moneda === 'USD');
       renderUSDAccount(cuentaUSD || null);
     }
@@ -105,16 +110,20 @@ const renderUSDAccount = (cuenta) => {
     if (eq) eq.dataset.saldo = saldoUSD;
     const cbuEl   = document.getElementById('usdDisplayCbu');
     const aliasEl = document.getElementById('usdDisplayAlias');
-    if (cbuEl)   cbuEl.textContent   = cuenta.cbu   || 'â€”';
-    if (aliasEl) aliasEl.textContent = cuenta.alias || 'â€”';
-    // botones compra/venta
-    document.getElementById('btnComprarUSD')?.addEventListener('click', () => abrirConvertModal('ARS','USD'));
-    document.getElementById('btnVenderUSD')?.addEventListener('click',  () => abrirConvertModal('USD','ARS'));
-    document.getElementById('btnTransferirUSD')?.addEventListener('click', abrirTransferirUSD);
+    if (cbuEl)   cbuEl.textContent   = cuenta.cbu   || '—';
+    if (aliasEl) aliasEl.textContent = cuenta.alias || '—';
+    // botones compra/venta — onclick evita listeners duplicados al llamar loadSaldo() varias veces
+    const btnComprar     = document.getElementById('btnComprarUSD');
+    const btnVender      = document.getElementById('btnVenderUSD');
+    const btnTransferUSD = document.getElementById('btnTransferirUSD');
+    if (btnComprar)     btnComprar.onclick     = () => abrirConvertModal('ARS','USD');
+    if (btnVender)      btnVender.onclick      = () => abrirConvertModal('USD','ARS');
+    if (btnTransferUSD) btnTransferUSD.onclick = abrirTransferirUSD;
   } else {
     sinEl.classList.remove('hidden');
     conEl.classList.add('hidden');
-    document.getElementById('btnAbrirUSD')?.addEventListener('click', handleAbrirUSD);
+    const btnAbrir = document.getElementById('btnAbrirUSD');
+    if (btnAbrir) btnAbrir.onclick = handleAbrirUSD;
   }
   renderCotizacionesUSD();
 };
@@ -132,7 +141,7 @@ const _confirmarAbrirUSD = async () => {
 
   confirm.disabled = true;
   cancel.disabled  = true;
-  confirm.textContent = 'Abriendoâ€¦';
+  confirm.textContent = 'Abriendo…';
 
   try {
     const data = await apiFetch('/cuentas/abrir', {

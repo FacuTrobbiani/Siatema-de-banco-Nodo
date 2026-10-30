@@ -1,5 +1,5 @@
-﻿// â”€â”€ Mercado (cotizaciones integradas en la tarjeta USD) â”€â”€
-const fmt = (n) => n != null ? `$${Number(n).toLocaleString('es-AR')}` : 'â€”';
+// ── Mercado (cotizaciones integradas en la tarjeta USD) ──
+const fmt = (n) => n != null ? `$${Number(n).toLocaleString('es-AR')}` : '—';
 
 let _dolares = [];
 
@@ -13,29 +13,7 @@ const loadMercado = async () => {
   } catch (_) {}
 };
 
-const renderHeroMovimientos = (movimientos) => {
-  const el = document.getElementById('heroMovimientos');
-  if (!el) return;
-  if (!movimientos || movimientos.length === 0) { el.classList.add('hidden'); return; }
-  const ultimos = movimientos.slice(0, 3);
-  el.classList.remove('hidden');
-  el.innerHTML = `<p class="hero-mov-hdr">Últimos movimientos</p>` + ultimos.map(mov => {
-    const ingreso = mov.tipo === 'credito' || mov.tipo === 'deposito' || mov.tipo === 'transferencia_recibida' || mov.tipo === 'conversion_entrada';
-    const monto = Math.abs(mov.monto);
-    const fecha = new Date(mov.fecha_movimiento).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
-    const icon  = ingreso ? 'fa-arrow-down' : 'fa-arrow-up';
-    const desc  = (mov.descripcion || 'Operación').replace(/^(Depósito|Deposito) ficticio$/i, 'Depósito');
-    return `
-      <div class="hero-mov-item">
-        <div class="hero-mov-icon ${ingreso ? 'ingreso' : 'egreso'}"><i class="fas ${icon}"></i></div>
-        <div class="hero-mov-text">
-          <p class="hero-mov-desc">${desc}</p>
-          <p class="hero-mov-date">${fecha}</p>
-        </div>
-        <span class="hero-mov-amount ${ingreso ? 'ingreso' : 'egreso'}">${ingreso ? '+' : '-'}$${monto.toLocaleString('es-AR')}</span>
-      </div>`;
-  }).join('');
-};
+const renderHeroMovimientos = () => {};
 
 const renderCotizacionesUSD = () => {
   const el = document.getElementById('usdCotizaciones');
@@ -46,17 +24,28 @@ const renderCotizacionesUSD = () => {
     ? new Date(blue.fechaActualizacion).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
     : null;
 
-  const cotizRow = (label, data) => `
-    <div class="cotiz-row">
-      <span class="cotiz-label">${label}</span>
-      <div class="cotiz-col">
-        <span class="cotiz-sub">Compra</span>
-        <span class="cotiz-val">${fmt(data?.compra)}</span>
+  const cotizCard = (label, data, tipo) => `
+    <div class="cotiz-card cotiz-card-${tipo}">
+      <div class="cotiz-card-hdr">
+        <span class="cotiz-card-label">${label}</span>
+        ${tipo === 'blue' ? '<span class="cotiz-card-badge">Blue</span>' : ''}
       </div>
-      <div class="cotiz-col cotiz-venta">
-        <span class="cotiz-sub">Venta</span>
-        <span class="cotiz-val">${fmt(data?.venta)}</span>
+      <div class="cotiz-card-vals">
+        <div class="cotiz-card-col">
+          <span class="cotiz-card-sub">Compra</span>
+          <span class="cotiz-card-num">${fmt(data?.compra)}</span>
+        </div>
+        <div class="cotiz-card-sep"></div>
+        <div class="cotiz-card-col">
+          <span class="cotiz-card-sub">Venta</span>
+          <span class="cotiz-card-num">${fmt(data?.venta)}</span>
+        </div>
       </div>
+      ${tipo === 'blue' ? `
+      <div class="cotiz-card-actions">
+        <button class="cotiz-action-btn" onclick="document.getElementById('btnComprarUSD')?.click()">Comprar</button>
+        <button class="cotiz-action-btn cotiz-action-sell" onclick="document.getElementById('btnVenderUSD')?.click()">Vender</button>
+      </div>` : ''}
     </div>`;
 
   el.innerHTML = `
@@ -64,8 +53,10 @@ const renderCotizacionesUSD = () => {
       <span class="cotiz-widget-title">Cotización USD</span>
       ${ts ? `<span class="cotiz-ts">Act. ${ts}</span>` : ''}
     </div>
-    ${cotizRow('Blue', blue)}
-    ${cotizRow('Oficial', oficial)}`;
+    <div class="cotiz-grid">
+      ${cotizCard('Blue', blue, 'blue')}
+      ${cotizCard('Oficial', oficial, 'oficial')}
+    </div>`;
 
   // Actualizar equivalente ARS en saldo USD
   if (blue?.venta) {
@@ -78,7 +69,7 @@ const renderCotizacionesUSD = () => {
   }
 };
 
-// â”€â”€ Toggle hero ARS/USD â”€â”€
+// ── Toggle hero ARS/USD ──
 const _setHeroTab = (vista) => {
   document.getElementById('tabARS')?.classList.toggle('active', vista === 'ARS');
   document.getElementById('tabUSD')?.classList.toggle('active', vista === 'USD');
@@ -97,7 +88,7 @@ const mostrarHeroUSD = () => {
   renderCotizacionesUSD();
 };
 
-// â”€â”€ Modal compra/venta USD â”€â”€
+// ── Modal compra/venta USD ──
 const abrirConvertModal = (de, a) => {
   const modal   = document.getElementById('usdConvertModal');
   const title   = document.getElementById('usdConvertTitle');
@@ -150,17 +141,20 @@ const abrirConvertModal = (de, a) => {
         body: JSON.stringify({ de, a, monto }),
       });
       modal.classList.add('hidden');
-      showToast(data.message, 4000, 'success');
+      const nuevoARS = esCompra ? data.saldoOrigen : data.saldoDest;
+      const nuevoUSD = esCompra ? data.saldoDest   : data.saldoOrigen;
+      const detalle  = `Nuevo saldo ARS: $${nuevoARS?.toLocaleString('es-AR',{minimumFractionDigits:2})} · USD: U$D${nuevoUSD?.toLocaleString('es-AR',{minimumFractionDigits:2})}`;
+      showToast(`${data.message} — ${detalle}`, 6000, 'success');
       await loadSaldo();
     } catch (e) {
-      showToast(e.message || 'Error en la conversiÃ³n', 4000, 'error');
+      showToast(e.message || 'Error en la conversi�n', 4000, 'error');
     } finally {
       btnLoad(confirm, false);
     }
   };
 };
 
-// â”€â”€ Modal transferir USD (2 pasos) â”€â”€
+// ── Modal transferir USD (2 pasos) ──
 const abrirTransferirUSD = () => {
   const modal   = document.getElementById('usdTransferModal');
   if (!modal) return;
@@ -201,7 +195,7 @@ const abrirTransferirUSD = () => {
     if (confirm) confirm.disabled = true;
 
     // Badge tasa
-    if (badge && blue) badge.textContent = `Referencia blue · ${fmt(blue.compra)} ARS/USD`;
+    if (badge && blue) badge.textContent = `Referencia blue � ${fmt(blue.compra)} ARS/USD`;
 
     // Tarjeta destinatario
     if (recipCard) {
@@ -222,7 +216,7 @@ const abrirTransferirUSD = () => {
   modal.classList.remove('hidden');
   goStep1();
 
-  // â”€â”€ Paso 1: buscar destinatario â”€â”€
+  // ── Paso 1: buscar destinatario ──
   let _destinatarioUSD = null;
   let _searchTimer = null;
 
@@ -236,19 +230,19 @@ const abrirTransferirUSD = () => {
     if (valor.length < 3) return;
     _searchTimer = setTimeout(async () => {
       try {
-        // CBU â†’ BC primero, fallback local; alias â†’ BC primero, fallback local
+        // CBU → BC primero, fallback local; alias → BC primero, fallback local
         const esCBU = /^\d{22}$/.test(valor);
         let data;
         if (esCBU) {
           try {
             data = await apiFetch(`/transferencias/buscar/${encodeURIComponent(valor)}`);
           } catch (_) {
-            // BC no encontrÃ³ por CBU (cuentas USD no estÃ¡n en /persons) â€” buscar en DB local
+            // BC no encontró por CBU (cuentas USD no están en /persons) — buscar en DB local
             const local = await apiFetch(`/cuentas/buscar-usd/${encodeURIComponent(valor)}`);
             if (local.found) {
               data = local;
             } else {
-              // CBU externo vÃ¡lido â€” BC acepta la transacciÃ³n aunque no devuelva el nombre
+              // CBU externo válido — BC acepta la transacción aunque no devuelva el nombre
               data = { cbu: valor, nombre: 'Cuenta', apellido: 'externa', alias: valor };
             }
           }
@@ -256,9 +250,9 @@ const abrirTransferirUSD = () => {
           try {
             data = await apiFetch(`/transferencias/alias/${encodeURIComponent(valor)}`);
           } catch (_) {
-            // BC no lo encontrÃ³ â€” buscar alias en DB local (cuentas USD de este banco)
+            // BC no lo encontró — buscar alias en DB local (cuentas USD de este banco)
             const local = await apiFetch(`/cuentas/buscar-usd/${encodeURIComponent(valor)}`);
-            if (!local.found) throw new Error('No se encontrÃ³ una cuenta USD con ese alias o CBU');
+            if (!local.found) throw new Error('No se encontr� una cuenta USD con ese alias o CBU');
             data = local;
           }
         }
@@ -284,7 +278,7 @@ const abrirTransferirUSD = () => {
         if (searchResult) searchResult.classList.add('hidden');
         if (searchErr) {
           searchErr.textContent = e.message?.includes('404') || e.message?.includes('no encontrad')
-            ? 'No se encontrÃ³ una cuenta con ese alias o CBU'
+            ? 'No se encontr� una cuenta con ese alias o CBU'
             : (e.message || 'No encontrado');
           searchErr.style.display = '';
         }
@@ -294,12 +288,12 @@ const abrirTransferirUSD = () => {
 
   if (nextBtn) nextBtn.onclick = () => { if (_destinatarioUSD) goStep2(_destinatarioUSD); };
 
-  // â”€â”€ Paso 2: monto â”€â”€
+  // ── Paso 2: monto ──
   montoInput.oninput = () => {
     const n = Number(montoInput.value.replace(',', '.'));
     if (confirm) confirm.disabled = !n || n <= 0;
     if (n > 0 && blue?.compra) {
-      if (equiv) { equiv.textContent = `≈ ${fmt(n * blue.compra)} ARS al tipo de cambio blue`; equiv.classList.add('visible'); }
+      if (equiv) { equiv.textContent = `� ${fmt(n * blue.compra)} ARS al tipo de cambio blue`; equiv.classList.add('visible'); }
     } else {
       equiv?.classList.remove('visible');
     }
@@ -319,7 +313,7 @@ const abrirTransferirUSD = () => {
       showToast(data.message || 'Transferencia realizada', 4000, 'success');
       await loadSaldo();
     } catch (e) {
-      if (errEl) { errEl.textContent = e.message || 'Error en la transferencia'; errEl.style.display = ''; }
+      showToast(e.message || 'Error en la transferencia', 4000, 'error');
     } finally {
       btnLoad(confirm, false);
     }

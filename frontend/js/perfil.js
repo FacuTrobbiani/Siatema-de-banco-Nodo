@@ -12,33 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const aliasModal        = document.getElementById("aliasModal");
   const perfilModal       = document.getElementById("perfilModal");
   const passwordModal     = document.getElementById("passwordModal");
-  const perfilTelefono    = document.getElementById("perfilTelefono");
 
-  perfilTelefono?.addEventListener("input", () => {
-    perfilTelefono.value = perfilTelefono.value.replace(/\D/g, "").slice(0, 12);
-  });
+  const openPerfilModal = () => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const el = id => document.getElementById(id);
+    if (el("perfilNombre"))    el("perfilNombre").value    = user.nombre    || "";
+    if (el("perfilApellido"))  el("perfilApellido").value  = user.apellido  || "";
+    if (el("perfilTelefono"))  el("perfilTelefono").value  = user.telefono  || "";
+    if (el("perfilDireccion")) el("perfilDireccion").value = user.direccion || "";
+    perfilModal?.classList.remove("hidden");
+  };
 
-  // Cargar datos del perfil
-  if (loadPerfilBtn) {
-    loadPerfilBtn.addEventListener("click", async () => {
-      try {
-        const user     = JSON.parse(localStorage.getItem("user") || "{}");
-        const cuentas  = await apiFetch("/cuentas/saldo");
-        const cuenta   = cuentas[0] || {};
-        const perfilData = document.getElementById("perfilData");
-        if (perfilData) {
-          perfilData.innerHTML = `
-            <div class="profile-card">
-              <div class="info-row"><span class="label">Nombre completo</span><span class="value">${user.nombre || ""} ${user.apellido || ""}</span></div>
-              <div class="info-row"><span class="label">Email</span><span class="value">${user.email || ""}</span></div>
-            </div>`;
-        }
-        editAliasBtn?.classList.remove("hidden");
-        editPerfilBtn?.classList.remove("hidden");
-        changePasswordBtn?.classList.remove("hidden");
-      } catch {}
-    });
-  }
+  // Cargar datos del perfil — ahora abre el modal directamente
+  loadPerfilBtn?.addEventListener("click", openPerfilModal);
+  editPerfilBtn?.addEventListener("click", openPerfilModal);
 
   // Modal alias
   editAliasBtn?.addEventListener("click", () => aliasModal?.classList.remove("hidden"));
@@ -46,7 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   aliasModal?.addEventListener("click", e => { if (e.target === aliasModal) aliasModal.classList.add("hidden"); });
 
   // Modal perfil
-  editPerfilBtn?.addEventListener("click",  () => perfilModal?.classList.remove("hidden"));
   cancelPerfilBtn?.addEventListener("click", () => perfilModal?.classList.add("hidden"));
   perfilModal?.addEventListener("click", e => { if (e.target === perfilModal) perfilModal.classList.add("hidden"); });
 
@@ -55,6 +41,19 @@ document.addEventListener("DOMContentLoaded", () => {
   cancelPasswordBtn?.addEventListener("click",  () => passwordModal?.classList.add("hidden"));
   passwordModal?.addEventListener("click", e => { if (e.target === passwordModal) passwordModal.classList.add("hidden"); });
 
+  // Confirmación de contraseña: "Actualizar" solo con los 3 campos completos y nueva === confirmación
+  const pwdCurrent  = document.getElementById("currentPassword");
+  const pwdNew      = document.getElementById("newPassword");
+  const pwdConfirm  = document.getElementById("confirmPassword");
+  const pwdMismatch = document.getElementById("passwordMismatch");
+  const pwdSubmit   = document.getElementById("passwordSubmitBtn");
+  const validatePasswordForm = () => {
+    const mismatch = pwdConfirm.value !== "" && pwdNew.value !== pwdConfirm.value;
+    pwdMismatch?.classList.toggle("hidden", !mismatch);
+    if (pwdSubmit) pwdSubmit.disabled = !pwdCurrent.value || !pwdNew.value || !pwdConfirm.value || mismatch;
+  };
+  [pwdCurrent, pwdNew, pwdConfirm].forEach(i => i?.addEventListener("input", validatePasswordForm));
+
   // Guardar alias
   if (aliasForm) {
     aliasForm.addEventListener("submit", async (event) => {
@@ -62,11 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const newAlias = document.getElementById("newAliasInput")?.value;
       formLoad(aliasForm, true);
       try {
-        await apiFetch("/auth/perfil", { method: "PUT", body: JSON.stringify({ alias: newAlias }) });
+        const data = await apiFetch("/auth/perfil", { method: "PUT", body: JSON.stringify({ alias: newAlias }) });
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          if (typeof actualizarIndicadorPerfil === "function") actualizarIndicadorPerfil();
+        }
         showToast("Alias actualizado con éxito", 3000, "success");
         document.getElementById("newAliasInput").value = "";
         aliasModal?.classList.add("hidden");
-        loadPerfilBtn?.click();
       } catch (error) {
         showToast(error.message?.includes("409") ? "El alias ya está en uso." : error.message || "Error al cambiar alias", 4000, "error");
       } finally {
@@ -84,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await apiFetch("/auth/perfil", {
           method: "PUT",
           body: JSON.stringify({
-            alias:     document.getElementById("perfilAlias")?.value    || undefined,
             nombre:    document.getElementById("perfilNombre")?.value   || undefined,
             apellido:  document.getElementById("perfilApellido")?.value || undefined,
             telefono:  document.getElementById("perfilTelefono")?.value || undefined,
@@ -97,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         showToast("Perfil actualizado correctamente", 3000, "success");
         perfilModal?.classList.add("hidden");
-        loadPerfilBtn?.click();
       } catch (error) {
         showToast(error.message || "Error al actualizar perfil", 4000, "error");
       } finally {
@@ -110,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (passwordForm) {
     passwordForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (pwdNew.value !== pwdConfirm.value) { validatePasswordForm(); return; }
       formLoad(passwordForm, true);
       try {
         await apiFetch("/auth/password", {
@@ -119,14 +120,14 @@ document.addEventListener("DOMContentLoaded", () => {
             newPassword:     document.getElementById("newPassword").value,
           }),
         });
-        document.getElementById("currentPassword").value = "";
-        document.getElementById("newPassword").value = "";
+        passwordForm.reset();
         passwordModal?.classList.add("hidden");
         showToast("Contraseña actualizada", 3000, "success");
       } catch (error) {
         showToast(error.message || "Error al cambiar contraseña", 4000, "error");
       } finally {
         formLoad(passwordForm, false);
+        validatePasswordForm();
       }
     });
   }

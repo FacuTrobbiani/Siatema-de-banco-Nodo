@@ -9,8 +9,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const data = await apiFetch("/auth/gastos-categoria");
       const categorias = (data.categorias || []).filter(c => c.monto > 0);
-      const ctx = document.getElementById("gastosChart")?.getContext("2d");
-      if (!ctx) return;
+      const canvas = document.getElementById("gastosChart");
+      if (!canvas) return;
+      const wrap = canvas.parentElement;
+
+      if (categorias.length === 0) {
+        if (gastosChart) { gastosChart.destroy(); gastosChart = null; }
+        canvas.style.display = "none";
+        let emp = wrap.querySelector(".gastos-empty");
+        if (!emp) {
+          emp = document.createElement("div");
+          emp.className = "gastos-empty";
+          emp.innerHTML = `<i class="fas fa-chart-pie"></i><p>Aún no tenés gastos registrados este mes</p>`;
+          wrap.appendChild(emp);
+        }
+        emp.style.display = "flex";
+        return;
+      }
+
+      // Hay datos: ocultar empty state y mostrar chart
+      const emp = wrap.querySelector(".gastos-empty");
+      if (emp) emp.style.display = "none";
+      canvas.style.display = "";
+
+      const ctx = canvas.getContext("2d");
       if (gastosChart) gastosChart.destroy();
       gastosChart = new Chart(ctx, {
         type: "doughnut",
@@ -18,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           labels: categorias.map(c => c.nombre),
           datasets: [{
             data: categorias.map(c => c.monto),
-            backgroundColor: ["#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6","#EC4899"],
+            backgroundColor: ["#6366F1","#10B981","#3B82F6","#F59E0B","#EF4444","#8B5CF6"],
             borderWidth: 2,
             borderColor: "transparent"
           }]
@@ -37,9 +59,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (session) cargarGastos();
 
   loadGastosBtn?.addEventListener("click", () => {
+    loadGastosBtn.classList.add("is-spinning");
+    loadGastosBtn.addEventListener("animationend", () => loadGastosBtn.classList.remove("is-spinning"), { once: true });
     btnLoad(loadGastosBtn, true);
     cargarGastos().finally(() => btnLoad(loadGastosBtn, false));
   });
+
+  // Refrescar gastos cada vez que la sección Finanzas se hace visible
+  const _secFinanzas = document.getElementById("section-finanzas");
+  if (_secFinanzas && session) {
+    new MutationObserver(() => {
+      if (_secFinanzas.classList.contains("active")) cargarGastos();
+    }).observe(_secFinanzas, { attributes: true, attributeFilter: ["class"] });
+  }
 
   // ── Tabs ARS / USD ──
   document.getElementById("tabARS")?.addEventListener("click", mostrarHeroARS);
@@ -119,7 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       showToast("Alias USD actualizado", 3000, "success");
       await loadSaldo();
     } catch (e) {
-      if (_usdAliasError) { _usdAliasError.textContent = e.message || "Error al cambiar alias"; _usdAliasError.style.display = ""; }
+      showToast(e.message || "Error al cambiar alias", 4000, "error");
     } finally {
       btnLoad(_usdAliasConfirm, false);
     }

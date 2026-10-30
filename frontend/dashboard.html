@@ -2,9 +2,17 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nodo</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>NODO</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#06B6D4">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="NODO">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=2">
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml">
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('nodo_theme')||'light')</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="./css/base.css">
@@ -17,9 +25,12 @@
   <link rel="stylesheet" href="./css/tarjeta.css">
   <link rel="stylesheet" href="./css/ui.css">
   <link rel="stylesheet" href="./css/prestamos.css">
+  <link rel="stylesheet" href="./css/inversiones.css">
   <link rel="stylesheet" href="./css/recarga.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <link rel="stylesheet" href="./css/tour.css">
+  <link rel="stylesheet" href="./css/mobile.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap">
@@ -60,23 +71,13 @@
           </button>
         </li>
         <li role="presentation">
+          <button class="sidebar-nav-item" data-section="inversiones" role="tab" aria-selected="false">
+            <i class="fas fa-chart-line"></i><span>Inversiones</span>
+          </button>
+        </li>
+        <li role="presentation">
           <button class="sidebar-nav-item" data-section="recargas" role="tab" aria-selected="false">
             <i class="fas fa-mobile-alt"></i><span>Recargas</span>
-          </button>
-        </li>
-        <li role="presentation">
-          <button class="sidebar-nav-item" data-section="servicios" role="tab" aria-selected="false">
-            <i class="fas fa-file-invoice-dollar"></i><span>Servicios</span>
-          </button>
-        </li>
-        <li role="presentation">
-          <button class="sidebar-nav-item" data-section="reportes" role="tab" aria-selected="false">
-            <i class="fas fa-chart-column"></i><span>Reportes</span>
-          </button>
-        </li>
-        <li role="presentation">
-          <button class="sidebar-nav-item" data-section="seguridad" role="tab" aria-selected="false">
-            <i class="fas fa-shield-alt"></i><span>Seguridad</span>
           </button>
         </li>
       </ul>
@@ -87,43 +88,112 @@
 
   <!-- Header -->
   <header class="header">
-    <div class="header-left">
-      <a class="header-brand" href="dashboard.html" aria-label="Volver al inicio de Nodo">
-        <div class="sb-isotipo">N</div>
-      </a>
-
+    <div class="header-user">
       <div class="user-menu">
-        <div class="user-trigger header-greeting">
-          <span>Hola, <span id="userName">Usuario</span></span>
+        <div class="user-trigger">
+          <div class="avatar-wrapper">
+            <div class="avatar-circle">
+              <img id="avatarImg" src="" alt="" class="avatar-img hidden">
+              <i id="avatarIcon" class="fas fa-user"></i>
+            </div>
+            <label for="avatarInput" class="avatar-edit-btn" title="Cambiar foto">
+              <i class="fas fa-camera"></i>
+            </label>
+            <input type="file" id="avatarInput" accept="image/*" class="hidden">
+          </div>
+          <span id="userName">Usuario</span>
           <i class="fas fa-chevron-down user-chevron"></i>
         </div>
 
         <!-- Dropdown panel -->
         <div class="user-dropdown">
-          <div class="dropdown-tools">
-            <button id="loadPerfilBtn" class="tool-btn">
-              <i class="fas fa-user-cog"></i><span>Editar perfil</span>
+
+          <!-- Cabecera -->
+          <div class="udrop-header">
+            <label for="avatarInput" class="udrop-avatar-sm" title="Cambiar foto de perfil">
+              <img id="avatarImgDrop" src="" alt="" class="avatar-img hidden">
+              <span id="avatarInitialsDrop" class="udrop-initials">?</span>
+              <span class="udrop-avatar-cam" aria-hidden="true"><i class="fas fa-camera"></i></span>
+            </label>
+            <div class="udrop-greeting-wrap">
+              <span class="udrop-hola">¡Hola, <span id="udropFirstName">Usuario</span>!</span>
+              <span class="udrop-badge"><i class="fas fa-circle udrop-badge-dot"></i> Cuenta Activa</span>
+            </div>
+          </div>
+
+          <!-- Progreso de perfil -->
+          <div class="udrop-progress">
+            <span class="udrop-progress-text">Perfil <strong id="udropPct">—</strong> completado</span>
+            <div class="udrop-progress-track">
+              <div class="udrop-progress-fill" id="udropFill"></div>
+            </div>
+          </div>
+
+          <div class="udrop-divider"></div>
+
+          <!-- Email y alias -->
+          <div class="udrop-account-info">
+            <div class="udrop-info-row">
+              <i class="fas fa-envelope udrop-ii"></i>
+              <span id="udropEmail" class="udrop-iv udrop-iv-truncate">—</span>
+            </div>
+            <div class="udrop-info-row">
+              <i class="fas fa-at udrop-ii"></i>
+              <span id="udropAliasVal" class="udrop-iv udrop-iv-truncate">—</span>
+              <button class="udrop-copy-alias" id="udropCopyAlias" title="Copiar alias">
+                <i class="fas fa-copy"></i>
+              </button>
+              <button class="udrop-copy-alias" id="udropEditAliasInline" title="Editar alias">
+                <i class="fas fa-pen"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="udrop-divider"></div>
+
+          <!-- Navegación -->
+          <nav class="udrop-menu" aria-label="Menú de perfil">
+            <button id="loadPerfilBtn" class="udrop-item">
+              <i class="fas fa-user udrop-item-icon"></i>
+              <span>Editar Perfil</span>
+              <i class="fas fa-chevron-right udrop-arrow"></i>
             </button>
-            <button id="logoutBtn" class="tool-btn tool-btn-logout">
-              <i class="fas fa-sign-out-alt"></i><span>Salir</span>
+            <button id="changePasswordBtn" class="udrop-item">
+              <i class="fas fa-key udrop-item-icon"></i>
+              <span>Cambiar Contraseña</span>
+              <i class="fas fa-chevron-right udrop-arrow"></i>
+            </button>
+            <button class="udrop-item udrop-item-disabled" disabled>
+              <i class="fas fa-shield-alt udrop-item-icon"></i>
+              <span>Seguridad</span>
+              <span class="udrop-soon">Próximamente</span>
+            </button>
+          </nav>
+
+          <div class="udrop-divider"></div>
+
+          <!-- Cerrar sesión -->
+          <div class="udrop-footer">
+            <button id="logoutBtn" class="udrop-item udrop-item-logout">
+              <i class="fas fa-sign-out-alt udrop-item-icon"></i>
+              <span>Cerrar sesión</span>
             </button>
           </div>
 
-          <div id="perfilData" class="perfil-data"></div>
-
-          <div class="profile-controls">
-            <button id="editAliasBtn"     class="btn-logout hidden">Alias</button>
-            <button id="editPerfilBtn"    class="btn-logout hidden">Perfil</button>
-            <button id="changePasswordBtn" class="btn-logout hidden">Contraseña</button>
+          <!-- Controles ocultos que usa perfil.js -->
+          <div hidden>
+            <div id="perfilData" class="perfil-data"></div>
+            <button id="editAliasBtn">Alias</button>
+            <button id="editPerfilBtn">Perfil</button>
+            <button id="editAliasDrop">editAlias</button>
+            <span id="udropName"></span>
+            <span id="udropFullName"></span>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="header-user">
-      <button id="themeToggleBtn" class="btn-theme-toggle" title="Modo oscuro" aria-label="Cambiar tema">
-        <i class="fas fa-moon"></i>
-      </button>
+      <button id="headerAyudaBtn" class="btn-header-ayuda"><i class="fas fa-question-circle"></i> Ayuda</button>
+      <button id="themeToggleBtn" class="btn-theme-toggle" title="Modo oscuro"><i class="fas fa-moon"></i></button>
     </div>
   </header>
 
@@ -187,7 +257,6 @@
         <button id="btn-qr-pay"            class="action-card"><i class="fas fa-qrcode"></i><span>Pagar QR</span></button>
         <button id="btn-qr-charge"         class="action-card"><i class="fas fa-hand-holding-usd"></i><span>Cobrar</span></button>
       </div>
-      <div id="heroMovimientos" class="hero-movimientos hidden"></div>
     </div>
 
     <!-- Panel USD -->
@@ -203,8 +272,14 @@
       </div>
 
       <div id="heroUSDSin" class="hidden">
-        <p class="balance-sub" style="margin-bottom:16px">Guardá dólares en tu cuenta NODO.</p>
-        <button id="btnAbrirUSD" class="btn-primary" style="max-width:240px">Abrir caja de ahorro en USD</button>
+        <div class="usd-promo-banner">
+          <div class="usd-promo-icon">💵</div>
+          <div class="usd-promo-text">
+            <span class="usd-promo-title">Caja de ahorro en Dólares</span>
+            <span class="usd-promo-sub">Operá dólares sin comisiones de mantenimiento.</span>
+          </div>
+          <button id="btnAbrirUSD" class="usd-promo-cta">Activar cuenta USD</button>
+        </div>
       </div>
 
       <div id="heroUSDCon" class="hidden">
@@ -244,7 +319,7 @@
     <div class="usd-modal-card" style="max-width:400px">
       <div class="usd-modal-hdr">
         <h3 class="usd-modal-title">Cambiar alias USD</h3>
-        <button id="usdAliasClose" class="usd-modal-close"><i class="fas fa-times"></i></button>
+        <button id="usdAliasClose" class="usd-modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <div class="usd-modal-body" style="gap:16px">
         <p style="color:var(--text-secondary);font-size:0.82rem">Solo letras minúsculas, números, puntos y guiones.</p>
@@ -263,7 +338,7 @@
     <div class="usd-modal-card" style="max-width:400px">
       <div class="usd-modal-hdr">
         <h3 class="usd-modal-title">Abrir cuenta en USD</h3>
-        <button id="usdAbrirClose" class="usd-modal-close"><i class="fas fa-times"></i></button>
+        <button id="usdAbrirClose" class="usd-modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <div class="usd-modal-body" style="text-align:center;gap:20px">
         <div style="font-size:2.4rem">💵</div>
@@ -287,7 +362,7 @@
     <div class="usd-modal-card">
       <div class="usd-modal-hdr">
         <h3 id="usdConvertTitle" class="usd-modal-title">Comprar dólares</h3>
-        <button id="usdConvertClose" class="usd-modal-close"><i class="fas fa-times"></i></button>
+        <button id="usdConvertClose" class="usd-modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <div class="usd-modal-body">
         <span id="usdConvertRateBadge" class="usd-rate-badge"></span>
@@ -313,7 +388,7 @@
       <div id="usdTransferStep1">
         <div class="usd-modal-hdr">
           <h3 class="usd-modal-title">¿A quién le transferís?</h3>
-          <button id="usdTransferClose" class="usd-modal-close"><i class="fas fa-times"></i></button>
+          <button id="usdTransferClose" class="usd-modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="usd-modal-body">
           <div class="usd-input-wrap">
@@ -331,7 +406,7 @@
         <div class="usd-modal-hdr">
           <button id="usdTransferBack" class="usd-modal-close" title="Volver"><i class="fas fa-arrow-left"></i></button>
           <h3 class="usd-modal-title">Transferir USD</h3>
-          <button id="usdTransferClose2" class="usd-modal-close"><i class="fas fa-times"></i></button>
+          <button id="usdTransferClose2" class="usd-modal-close" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="usd-modal-body">
           <div id="usdTransferRecipientCard" class="usd-recipient-card"></div>
@@ -369,9 +444,19 @@
       <i class="fas fa-chevron-down card-collapsible-icon"></i>
     </button>
     <div class="card-collapsible-body hidden" id="actividadBody">
-      <div class="card-header" style="padding-top:0;border-top:1px solid var(--border);margin-top:12px">
-        <span></span>
-        <button id="loadMovimientosBtn" class="btn-link">Actualizar</button>
+      <div class="actividad-toolbar">
+        <div class="actividad-search-wrap">
+          <i class="fas fa-search actividad-search-icon"></i>
+          <input type="text" id="actividadSearch" class="actividad-search" placeholder="Buscar por nombre o monto…" autocomplete="off">
+        </div>
+        <button id="loadMovimientosBtn" class="actividad-refresh-btn" title="Actualizar">
+          <i class="fas fa-rotate-right"></i>
+        </button>
+      </div>
+      <div class="actividad-filters">
+        <button class="actividad-filter active" data-filter="todos">Todos</button>
+        <button class="actividad-filter" data-filter="ingresos">Ingresos</button>
+        <button class="actividad-filter" data-filter="egresos">Egresos</button>
       </div>
       <ul id="movimientosList" class="list movements-list"></ul>
     </div>
@@ -583,7 +668,7 @@
     <div class="card">
       <div class="card-header">
         <h2>Mis Reservas</h2>
-        <button id="showReservaFormBtn" class="btn-link">+ Nueva</button>
+        <button id="showReservaFormBtn" class="btn-ghost-green">+ Nueva</button>
       </div>
       <ul id="reservasList" class="list movements-list"></ul>
     </div>
@@ -591,7 +676,7 @@
     <div class="card">
       <div class="card-header">
         <h2>Gastos por categoría</h2>
-        <button id="loadGastosBtn" class="btn-link">Actualizar</button>
+        <button id="loadGastosBtn" class="btn-icon-refresh" title="Actualizar"><i class="fas fa-rotate-right"></i></button>
       </div>
       <div class="chart-container">
         <canvas id="gastosChart"></canvas>
@@ -600,6 +685,368 @@
   </div>
 
   </section><!-- /section-finanzas -->
+
+  <!-- ══════════════ SECCIÓN: INVERSIONES ══════════════ -->
+  <section id="section-inversiones" class="content-section">
+
+    <!-- Header patrimonio -->
+    <div class="card inv-header-card">
+      <div>
+        <span class="inv-patrimonio-label">Patrimonio invertido</span>
+        <span class="inv-patrimonio-amount" id="invPatrimonioTotal">$0</span>
+      </div>
+      <div class="inv-header-right">
+        <div class="inv-market-pills">
+          <span class="inv-pill" id="invCCLPill"><i class="fas fa-dollar-sign"></i> CCL: —</span>
+          <span class="inv-pill" id="invPFTasaPill"><i class="fas fa-percent"></i> PF: —</span>
+        </div>
+        <button id="invHelpBtn" class="inv-help-btn"><i class="fas fa-question-circle"></i> Ver tutorial</button>
+      </div>
+    </div>
+
+    <!-- Segmented control de pestañas -->
+    <div class="inv-segmented" role="tablist">
+      <button class="inv-seg-btn active" data-inv-tab="plazo-fijo" role="tab">Plazo Fijo</button>
+      <button class="inv-seg-btn" data-inv-tab="cauciones" role="tab">Cauciones</button>
+      <button class="inv-seg-btn" data-inv-tab="cedears" role="tab">CEDEARs</button>
+    </div>
+
+    <!-- ── Tab: Plazo Fijo ── -->
+    <div id="inv-tab-plazo-fijo" class="inv-tab-panel">
+
+      <!-- Formulario -->
+      <div class="card inv-form-card">
+        <div class="card-header" style="margin-bottom:16px">
+          <h3 class="card-title">Constituir Plazo Fijo</h3>
+          <span class="inv-tna-badge" id="pfTNABadge">— TNA</span>
+        </div>
+        <form id="pfForm" class="inv-form" autocomplete="off">
+          <div class="inv-dias-group">
+            <button type="button" class="inv-dias-btn" data-dias="30">30 días</button>
+            <button type="button" class="inv-dias-btn" data-dias="60">60 días</button>
+            <button type="button" class="inv-dias-btn" data-dias="90">90 días</button>
+          </div>
+          <div class="inv-input-group">
+            <span class="inv-currency">$</span>
+            <input type="text" id="pfMonto" inputmode="numeric" placeholder="Monto a invertir">
+          </div>
+          <div class="inv-preset-chips">
+            <button type="button" class="inv-chip" data-target="pfMonto" data-amount="10000">+$10.000</button>
+            <button type="button" class="inv-chip" data-target="pfMonto" data-amount="50000">+$50.000</button>
+            <button type="button" class="inv-chip" data-target="pfMonto" data-amount="100000">+$100.000</button>
+            <button type="button" class="inv-chip inv-chip--all" data-target="pfMonto" data-amount="all">Todo mi saldo</button>
+          </div>
+          <div id="pfPreview" class="inv-preview" hidden>
+            <div class="inv-preview-highlight">
+              <span class="inv-preview-highlight-label">Ganancia neta</span>
+              <span class="inv-preview-highlight-value" id="pfRendimiento">—</span>
+            </div>
+            <div class="inv-preview-divider"></div>
+            <div class="inv-preview-row">
+              <span>Total al vencimiento</span>
+              <span id="pfTotal">—</span>
+            </div>
+            <div class="inv-preview-row">
+              <span>Fecha de acreditación</span>
+              <span id="pfFechaAcred" style="color:#94a3b8">—</span>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%">Constituir Plazo Fijo</button>
+        </form>
+      </div>
+
+      <!-- Lista activos -->
+      <div class="card" style="padding:0">
+        <div class="card-header" style="padding:16px 20px">
+          <h3 class="card-title">Mis Plazos Fijos</h3>
+        </div>
+        <ul id="pfList" class="inv-list" style="list-style:none;padding:0;margin:0">
+          <li class="inv-empty-state">
+            <i class="fas fa-piggy-bank inv-empty-icon"></i>
+            <p class="inv-empty-title">Aún no tenés plazos fijos</p>
+            <p class="inv-empty-sub">Constituí tu primer plazo fijo para empezar a hacer rendir tu dinero día a día.</p>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /inv-tab-plazo-fijo -->
+
+    <!-- ── Tab: Cauciones ── -->
+    <div id="inv-tab-cauciones" class="inv-tab-panel" hidden>
+
+      <div class="card inv-form-card">
+        <div class="card-header" style="margin-bottom:16px">
+          <h3 class="card-title">Colocar Caución <span class="inv-info-icon" data-tip="Préstamo bursátil de muy corto plazo (1-14 días). Ofrecés liquidez al mercado a cambio de una tasa garantizada.">i</span></h3>
+          <span class="inv-tna-badge" id="caucionTNABadge">— TNA</span>
+        </div>
+        <form id="caucionForm" class="inv-form" autocomplete="off">
+          <div class="inv-dias-group">
+            <button type="button" class="inv-dias-btn-c" data-dias="1">1 día</button>
+            <button type="button" class="inv-dias-btn-c" data-dias="7">7 días</button>
+            <button type="button" class="inv-dias-btn-c" data-dias="14">14 días</button>
+          </div>
+          <div class="inv-input-group">
+            <span class="inv-currency">$</span>
+            <input type="text" id="caucionMonto" inputmode="numeric" placeholder="Monto a colocar">
+          </div>
+          <div class="inv-preset-chips">
+            <button type="button" class="inv-chip" data-target="caucionMonto" data-amount="10000">+$10.000</button>
+            <button type="button" class="inv-chip" data-target="caucionMonto" data-amount="50000">+$50.000</button>
+            <button type="button" class="inv-chip" data-target="caucionMonto" data-amount="100000">+$100.000</button>
+            <button type="button" class="inv-chip inv-chip--all" data-target="caucionMonto" data-amount="all">Todo mi saldo</button>
+          </div>
+          <div id="caucionPreview" class="inv-preview" hidden>
+            <div class="inv-preview-highlight">
+              <span class="inv-preview-highlight-label">Ganancia neta</span>
+              <span class="inv-preview-highlight-value" id="caucionRendimiento">—</span>
+            </div>
+            <div class="inv-preview-divider"></div>
+            <div class="inv-preview-row">
+              <span>Total al vencimiento</span>
+              <span id="caucionTotal">—</span>
+            </div>
+            <div class="inv-preview-row">
+              <span>Fecha de acreditación</span>
+              <span id="caucionFechaAcred" style="color:#94a3b8">—</span>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%">Colocar Caución</button>
+        </form>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div class="card-header" style="padding:16px 20px">
+          <h3 class="card-title">Mis Cauciones</h3>
+        </div>
+        <ul id="caucionesList" class="inv-list" style="list-style:none;padding:0;margin:0">
+          <li class="inv-empty-state">
+            <i class="fas fa-chart-line inv-empty-icon"></i>
+            <p class="inv-empty-title">Sin cauciones activas</p>
+            <p class="inv-empty-sub">Colocá una caución y recibí rendimientos en 1, 7 o 14 días.</p>
+          </li>
+        </ul>
+      </div>
+
+    </div><!-- /inv-tab-cauciones -->
+
+    <!-- ── Tab: CEDEARs ── -->
+    <div id="inv-tab-cedears" class="inv-tab-panel" hidden>
+      <div class="card" style="padding:0">
+        <div class="card-header" style="padding:16px 20px">
+          <h3 class="card-title">Cotizaciones CEDEAR</h3>
+          <span class="inv-badge-info">Precios referenciales en ARS · CCL live</span>
+        </div>
+        <ul id="cedearsList" class="inv-cedears-list">
+          <li class="inv-empty-state">
+            <i class="fas fa-globe inv-empty-icon"></i>
+            <p class="inv-empty-title">Cargando cotizaciones…</p>
+            <p class="inv-empty-sub">Seleccioná la pestaña para ver los precios en tiempo real.</p>
+          </li>
+        </ul>
+      </div>
+    </div><!-- /inv-tab-cedears -->
+
+  </section><!-- /section-inversiones -->
+
+  <!-- ══════════════ SECCIÓN: RECARGAS ══════════════ -->
+  <section id="section-recargas" class="content-section">
+
+    <div class="card" id="recargasSectionCard">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="recarga-header-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <div>
+            <h2 class="card-title" style="margin:0;">Recargar Celular</h2>
+            <p style="font-size:0.8rem;color:var(--text-3);margin:0;">Acreditación inmediata para Movistar, Personal, Claro y Tuenti</p>
+          </div>
+        </div>
+        <span id="recargaSectionSaldoDisponible" class="recarga-saldo-badge">Saldo: $ 0,00</span>
+      </div>
+
+      <div class="recarga-grid-container">
+        <!-- Columna principal: Pasos interactivos -->
+        <div class="recarga-panel-card">
+
+          <!-- Paso 1: Configuración -->
+          <div id="recargaStep1" class="recarga-step">
+            <div>
+              <div class="recarga-section-label"><span>1. Seleccioná tu operador</span></div>
+              <div class="operators-grid" role="radiogroup" aria-label="Operador móvil">
+                <button type="button" class="operator-card" data-operator="Movistar" role="radio" aria-checked="false">
+                  <div class="operator-badge">M</div>
+                  <div class="operator-info">
+                    <span class="operator-name">Movistar</span>
+                    <span class="operator-tag">Prepago y control</span>
+                  </div>
+                  <i class="fas fa-check-circle operator-check"></i>
+                </button>
+                <button type="button" class="operator-card" data-operator="Personal" role="radio" aria-checked="false">
+                  <div class="operator-badge"><i class="fas fa-wifi"></i></div>
+                  <div class="operator-info">
+                    <span class="operator-name">Personal</span>
+                    <span class="operator-tag">Prepago y abono</span>
+                  </div>
+                  <i class="fas fa-check-circle operator-check"></i>
+                </button>
+                <button type="button" class="operator-card" data-operator="Claro" role="radio" aria-checked="false">
+                  <div class="operator-badge"><i class="fas fa-sun"></i></div>
+                  <div class="operator-info">
+                    <span class="operator-name">Claro</span>
+                    <span class="operator-tag">Prepago y planes</span>
+                  </div>
+                  <i class="fas fa-check-circle operator-check"></i>
+                </button>
+                <button type="button" class="operator-card" data-operator="Tuenti" role="radio" aria-checked="false">
+                  <div class="operator-badge"><i class="fas fa-bolt"></i></div>
+                  <div class="operator-info">
+                    <span class="operator-name">Tuenti</span>
+                    <span class="operator-tag">Combos y recargas</span>
+                  </div>
+                  <i class="fas fa-check-circle operator-check"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="recarga-section-label"><span>2. Número de celular</span></div>
+              <div class="phone-input-wrap" id="phoneInputWrap">
+                <span class="phone-prefix-badge"><span class="phone-prefix-flag">🇦🇷</span> +54 9</span>
+                <input type="tel" id="recargaTelefono" class="phone-input-field" placeholder="11 2345 6789" maxlength="14" autocomplete="off" inputmode="numeric">
+              </div>
+              <div class="phone-helper-text">
+                <i class="fas fa-info-circle"></i>
+                <span>10 a 12 dígitos con código de área, sin 0 ni 15. Ej: 11 2345-6789</span>
+              </div>
+              <div id="recargaPhoneError" class="phone-error-text"></div>
+            </div>
+
+            <div>
+              <div class="recarga-section-label"><span>3. Monto a recargar</span></div>
+              <div class="amounts-grid" role="group" aria-label="Montos predeterminados">
+                <button type="button" class="amount-chip" data-amount="500">$500</button>
+                <button type="button" class="amount-chip" data-amount="1000">$1.000</button>
+                <button type="button" class="amount-chip" data-amount="2000">$2.000</button>
+                <button type="button" class="amount-chip" data-amount="5000">$5.000</button>
+              </div>
+              <div class="custom-amount-toggle-wrap">
+                <button type="button" id="btnCustomAmountToggle" class="btn-custom-amount-toggle">
+                  <i class="fas fa-pen"></i><span>Ingresar otro monto</span>
+                </button>
+                <div id="customAmountBox" class="custom-amount-box hidden">
+                  <span class="custom-currency-sign">$</span>
+                  <input type="text" inputmode="numeric" id="recargaMontoCustom" class="custom-amount-input" placeholder="0" autocomplete="off">
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="btnRecargaContinuar" class="btn-primary" style="width:100%;margin-top:4px;" disabled>Continuar</button>
+          </div>
+
+          <!-- Paso 2: Confirmación -->
+          <div id="recargaStepConfirm" class="recarga-step hidden">
+            <div class="recarga-summary-card">
+              <div class="recarga-summary-header">
+                <div class="recarga-summary-badge" id="confirmOpBadge">M</div>
+                <div class="recarga-summary-op-text">
+                  <h4 id="confirmOpNombre">Movistar</h4>
+                  <span>Recarga de saldo prepago</span>
+                </div>
+              </div>
+              <div class="recarga-summary-row"><span class="label">Línea destinataria</span><span class="value" id="confirmTelefono">—</span></div>
+              <div class="recarga-summary-row"><span class="label">Medio de pago</span><span class="value">Cuenta en Pesos (ARS)</span></div>
+              <div class="recarga-summary-row"><span class="label">Saldo disponible</span><span class="value" id="confirmSaldoOrigen">—</span></div>
+              <div class="recarga-summary-row"><span class="label">Acreditación</span><span class="value" style="color:var(--green);"><i class="fas fa-bolt"></i> Inmediata</span></div>
+              <div class="recarga-summary-row recarga-summary-total"><span class="label">Total a debitar</span><span class="value" id="confirmMonto">—</span></div>
+            </div>
+            <div class="recarga-actions-row">
+              <button type="button" id="btnRecargaVolver" class="btn-secondary" style="flex:1;">Modificar</button>
+              <button type="button" id="btnConfirmarRecarga" class="btn-primary" style="flex:1.5;">Confirmar recarga</button>
+            </div>
+          </div>
+
+          <!-- Paso 3: Procesando -->
+          <div id="recargaStepProcessing" class="recarga-step hidden">
+            <div class="recarga-processing-box">
+              <div class="recarga-spinner-ring"></div>
+              <div class="recarga-processing-title">Procesando recarga...</div>
+              <p class="recarga-processing-sub" id="recargaProcessingSub">Estamos conectando con el operador.</p>
+            </div>
+          </div>
+
+          <!-- Paso 4: Éxito -->
+          <div id="recargaStepSuccess" class="recarga-step hidden">
+            <div class="recarga-result-card">
+              <div class="recarga-result-icon success"><i class="fas fa-check"></i></div>
+              <h3 class="recarga-result-title">¡Recarga exitosa!</h3>
+              <p class="recarga-result-sub">Tu línea ya cuenta con el saldo acreditado.</p>
+              <div class="recarga-receipt-box">
+                <div class="receipt-code-badge">
+                  <span id="recargaSuccessComprobante">REC-000000</span>
+                  <button type="button" id="btnCopyComprobanteRecarga" class="receipt-copy-btn" title="Copiar comprobante"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="recarga-receipt-row"><span class="label">Operador</span><span class="value" id="recargaSuccessOp">—</span></div>
+                <div class="recarga-receipt-row"><span class="label">Número</span><span class="value" id="recargaSuccessTel">—</span></div>
+                <div class="recarga-receipt-row"><span class="label">Monto recargado</span><span class="value" id="recargaSuccessMonto" style="color:var(--green);">—</span></div>
+                <div class="recarga-receipt-row"><span class="label">Nuevo saldo</span><span class="value" id="recargaSuccessSaldo">—</span></div>
+                <div class="recarga-receipt-row"><span class="label">Fecha y hora</span><span class="value" id="recargaSuccessFecha">—</span></div>
+              </div>
+              <div style="display:flex;gap:10px;width:100%;margin-top:6px;">
+                <button type="button" id="btnRecargaSuccessNueva" class="btn-secondary" style="flex:1;">Otra recarga</button>
+                <button type="button" id="btnRecargaSuccessDescargar" class="btn-secondary" style="flex:1;"><i class="fas fa-download"></i> Comprobante</button>
+              </div>
+              <button type="button" id="btnRecargaSuccessListo" class="btn-primary" style="width:100%;">Volver al inicio</button>
+            </div>
+          </div>
+
+          <!-- Paso 5: Error / Saldo insuficiente -->
+          <div id="recargaStepError" class="recarga-step hidden">
+            <div class="recarga-result-card">
+              <div class="recarga-result-icon error"><i class="fas fa-exclamation-triangle"></i></div>
+              <h3 class="recarga-result-title">Saldo insuficiente</h3>
+              <p class="recarga-result-sub" id="recargaErrorSub">No disponés de fondos suficientes.</p>
+              <div class="recarga-receipt-box">
+                <div class="recarga-receipt-row"><span class="label">Saldo disponible</span><span class="value" id="recargaErrorSaldoDisp" style="color:var(--text);">—</span></div>
+                <div class="recarga-receipt-row"><span class="label">Monto requerido</span><span class="value" id="recargaErrorMontoReq" style="color:#ef4444;">—</span></div>
+              </div>
+              <div style="display:flex;gap:10px;width:100%;margin-top:6px;">
+                <button type="button" id="btnRecargaErrorCerrar" class="btn-secondary" style="flex:1;">Volver al inicio</button>
+                <button type="button" id="btnRecargaErrorReintentar" class="btn-primary" style="flex:1;">Elegir otro monto</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /recarga-panel-card -->
+
+        <!-- Columna lateral: Beneficios -->
+        <div class="recarga-info-side">
+          <div class="recarga-promo-box">
+            <div class="promo-icon"><i class="fas fa-bolt"></i></div>
+            <h4>Acreditación inmediata</h4>
+            <p>El saldo se acredita en tu línea al instante tras confirmar.</p>
+          </div>
+          <div class="recarga-promo-box">
+            <div class="promo-icon"><i class="fas fa-shield-alt"></i></div>
+            <h4>Sin costo adicional</h4>
+            <p>Recargá sin comisiones ni cargos extras desde tu cuenta NODO.</p>
+          </div>
+          <div class="recarga-promo-box">
+            <div class="promo-icon"><i class="fas fa-percentage"></i></div>
+            <h4>10% de reintegro</h4>
+            <p>Los miércoles tenés 10% de cashback en recargas de cualquier operador.</p>
+          </div>
+          <div class="recarga-promo-box" style="border-left:3px solid var(--green);">
+            <div class="promo-icon" style="color:var(--green);background:rgba(6,182,212,0.1);"><i class="fas fa-phone-alt"></i></div>
+            <h4>Formato de número</h4>
+            <p>10 dígitos con código de área, sin 0 ni 15. Ej: 11 2345-6789.</p>
+          </div>
+        </div>
+
+      </div><!-- /recarga-grid-container -->
+    </div><!-- /recargasSectionCard -->
+
+  </section><!-- /section-recargas -->
 
   <!-- ══════════════ SECCIÓN: TARJETAS ══════════════ -->
   <section id="section-tarjetas" class="content-section">
@@ -671,7 +1118,7 @@
           <i class="fas fa-lock-open"></i><span>Bloquear</span>
         </button>
         <button id="pagarTarjetaBtn" class="btn-card-ctrl btn-card-pay">
-          <i class="fas fa-shopping-cart"></i><span>Simular pago</span>
+          <i class="fas fa-shopping-cart"></i><span>Pagar</span>
         </button>
       </div>
       <div id="cardDataPanel" class="card-data-panel hidden">
@@ -710,18 +1157,18 @@
             <span class="card-data-value" id="cardDataLimit">—</span>
           </div>
         </div>
-        <!-- Dar de baja (acción destructiva, relegada al panel de datos) -->
-        <div class="card-data-baja-wrap">
-          <button id="cancelarTarjetaBtn" class="card-data-baja-btn">
-            <i class="fas fa-times-circle"></i> Dar de baja tarjeta
-          </button>
-        </div>
-        <div id="cancelCardConfirm" class="cancel-card-confirm hidden">
-          <p><i class="fas fa-exclamation-triangle"></i> ¿Seguro que querés dar de baja la tarjeta? Esta acción no se puede deshacer.</p>
-          <div class="cancel-card-confirm-btns">
-            <button id="cancelCardConfirmYes" class="btn-primary" style="background:#ef4444;flex:1;">Sí, dar de baja</button>
-            <button id="cancelCardConfirmNo" class="btn-logout" style="flex:1;">No, volver</button>
-          </div>
+      </div>
+      <!-- Dar de baja (acción destructiva, fuera del panel) -->
+      <div class="card-data-baja-wrap">
+        <button id="cancelarTarjetaBtn" class="card-data-baja-btn">
+          <i class="fas fa-trash-alt"></i> Dar de baja tarjeta
+        </button>
+      </div>
+      <div id="cancelCardConfirm" class="cancel-card-confirm hidden">
+        <p><i class="fas fa-exclamation-triangle"></i> ¿Seguro que querés dar de baja la tarjeta? Esta acción no se puede deshacer.</p>
+        <div class="cancel-card-confirm-btns">
+          <button id="cancelCardConfirmYes" class="btn-primary" style="background:#ef4444;flex:1;">Sí, dar de baja</button>
+          <button id="cancelCardConfirmNo" class="btn-logout" style="flex:1;">No, volver</button>
         </div>
       </div>
 
@@ -742,13 +1189,13 @@
     <div class="transfer-modal-card">
       <div class="transfer-modal-header">
         <h2 class="transfer-modal-title">Pagar con tarjeta</h2>
-        <button id="closeCardPayModal" class="modal-close-btn"><i class="fas fa-times"></i></button>
+        <button id="closeCardPayModal" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs" style="margin-bottom:18px;">
-        <button class="tab active" data-pay-tab="merchant">Comercio</button>
-        <button class="tab" data-pay-tab="person">Persona / Alias</button>
+      <!-- Toggle tabs -->
+      <div class="pay-tab-toggle">
+        <button class="pay-tab-btn active" data-pay-tab="merchant">Comercio</button>
+        <button class="pay-tab-btn" data-pay-tab="person">Persona / Alias</button>
       </div>
 
       <form id="cardPayForm" class="styled-form">
@@ -772,637 +1219,14 @@
           <div id="payAliasPreview" class="receptor-info-msg"></div>
         </div>
 
-        <input type="text" inputmode="numeric" id="payAmount" placeholder="$ Monto" required>
+        <div class="pay-amount-wrap">
+          <span class="pay-amount-prefix">$</span>
+          <input type="text" inputmode="numeric" id="payAmount" class="pay-amount-input" placeholder="Monto" required>
+        </div>
         <button type="submit" class="btn-primary">Confirmar pago</button>
       </form>
     </div>
   </div>
-
-  </section><!-- /section-tarjetas -->
-
-  <!-- ══════════════ SECCIÓN: RECARGAS ══════════════ -->
-  <section id="section-recargas" class="content-section">
-
-    <div class="card" id="recargasSectionCard">
-      <div class="card-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="recarga-header-icon">
-            <i class="fas fa-mobile-alt"></i>
-          </div>
-          <div>
-            <h2 class="card-title" style="margin:0;">Recargar Celular</h2>
-            <p style="font-size:0.8rem;color:var(--text-3);margin:0;">Acreditación inmediata para Movistar, Personal, Claro y Tuenti</p>
-          </div>
-        </div>
-        <span id="recargaSectionSaldoDisponible" class="recarga-saldo-badge">Saldo: $ 0,00</span>
-      </div>
-
-      <div class="recarga-grid-container">
-
-        <!-- Columna principal: Pasos interactivos -->
-        <div class="recarga-panel-card">
-
-          <!-- ── Paso 1: Configuración de la recarga ── -->
-          <div id="recargaStep1" class="recarga-step">
-            
-            <!-- 1. Selección de Operador -->
-            <div>
-              <div class="recarga-section-label">
-                <span>1. Seleccioná tu operador</span>
-              </div>
-              <div class="operators-grid" role="radiogroup" aria-label="Operador móvil">
-                <button type="button" class="operator-card" data-operator="Movistar" role="radio" aria-checked="false">
-                  <div class="operator-badge">M</div>
-                  <div class="operator-info">
-                    <span class="operator-name">Movistar</span>
-                    <span class="operator-tag">Prepago y control</span>
-                  </div>
-                  <i class="fas fa-check-circle operator-check"></i>
-                </button>
-
-                <button type="button" class="operator-card" data-operator="Personal" role="radio" aria-checked="false">
-                  <div class="operator-badge"><i class="fas fa-wifi"></i></div>
-                  <div class="operator-info">
-                    <span class="operator-name">Personal</span>
-                    <span class="operator-tag">Prepago y abono</span>
-                  </div>
-                  <i class="fas fa-check-circle operator-check"></i>
-                </button>
-
-                <button type="button" class="operator-card" data-operator="Claro" role="radio" aria-checked="false">
-                  <div class="operator-badge"><i class="fas fa-sun"></i></div>
-                  <div class="operator-info">
-                    <span class="operator-name">Claro</span>
-                    <span class="operator-tag">Prepago y planes</span>
-                  </div>
-                  <i class="fas fa-check-circle operator-check"></i>
-                </button>
-
-                <button type="button" class="operator-card" data-operator="Tuenti" role="radio" aria-checked="false">
-                  <div class="operator-badge"><i class="fas fa-bolt"></i></div>
-                  <div class="operator-info">
-                    <span class="operator-name">Tuenti</span>
-                    <span class="operator-tag">Combos y recargas</span>
-                  </div>
-                  <i class="fas fa-check-circle operator-check"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- 2. Número de Celular -->
-            <div>
-              <div class="recarga-section-label">
-                <span>2. Número de celular</span>
-              </div>
-              <div class="phone-input-wrap" id="phoneInputWrap">
-                <span class="phone-prefix-badge">
-                  <span class="phone-prefix-flag">🇦🇷</span> +54 9
-                </span>
-                <input type="tel" id="recargaTelefono" class="phone-input-field" placeholder="11 2345 6789" maxlength="14" autocomplete="off" inputmode="numeric">
-              </div>
-              <div class="phone-helper-text">
-                <i class="fas fa-info-circle"></i>
-                <span>10 a 12 dígitos con código de área, sin 0 ni 15. Ej: 11 2345-6789</span>
-              </div>
-              <div id="recargaPhoneError" class="phone-error-text"></div>
-            </div>
-
-            <!-- 3. Selector de Monto -->
-            <div>
-              <div class="recarga-section-label">
-                <span>3. Monto a recargar</span>
-              </div>
-              <div class="amounts-grid" role="group" aria-label="Montos predeterminados">
-                <button type="button" class="amount-chip" data-amount="500">$500</button>
-                <button type="button" class="amount-chip" data-amount="1000">$1.000</button>
-                <button type="button" class="amount-chip" data-amount="2000">$2.000</button>
-                <button type="button" class="amount-chip" data-amount="5000">$5.000</button>
-              </div>
-
-              <div class="custom-amount-toggle-wrap">
-                <button type="button" id="btnCustomAmountToggle" class="btn-custom-amount-toggle">
-                  <i class="fas fa-pen"></i><span>Ingresar otro monto</span>
-                </button>
-                <div id="customAmountBox" class="custom-amount-box hidden">
-                  <span class="custom-currency-sign">$</span>
-                  <input type="text" inputmode="numeric" id="recargaMontoCustom" class="custom-amount-input" placeholder="0" autocomplete="off">
-                </div>
-              </div>
-            </div>
-
-            <button type="button" id="btnRecargaContinuar" class="btn-primary" style="width:100%;margin-top:4px;" disabled>
-              Continuar
-            </button>
-          </div>
-
-          <!-- ── Paso 2: Pantalla de Confirmación ── -->
-          <div id="recargaStepConfirm" class="recarga-step hidden">
-            <div class="recarga-summary-card">
-              <div class="recarga-summary-header">
-                <div class="recarga-summary-badge" id="confirmOpBadge">M</div>
-                <div class="recarga-summary-op-text">
-                  <h4 id="confirmOpNombre">Movistar</h4>
-                  <span>Recarga de saldo prepago</span>
-                </div>
-              </div>
-
-              <div class="recarga-summary-row">
-                <span class="label">Línea destinataria</span>
-                <span class="value" id="confirmTelefono">+54 9 11 2345-6789</span>
-              </div>
-
-              <div class="recarga-summary-row">
-                <span class="label">Medio de pago</span>
-                <span class="value">Cuenta en Pesos (ARS)</span>
-              </div>
-
-              <div class="recarga-summary-row">
-                <span class="label">Saldo disponible</span>
-                <span class="value" id="confirmSaldoOrigen">$ 0,00</span>
-              </div>
-
-              <div class="recarga-summary-row">
-                <span class="label">Acreditación</span>
-                <span class="value" style="color:var(--green);"><i class="fas fa-bolt"></i> Inmediata</span>
-              </div>
-
-              <div class="recarga-summary-row recarga-summary-total">
-                <span class="label">Total a debitar</span>
-                <span class="value" id="confirmMonto">$ 0,00</span>
-              </div>
-            </div>
-
-            <div class="recarga-actions-row">
-              <button type="button" id="btnRecargaVolver" class="btn-secondary" style="flex:1;">
-                Modificar
-              </button>
-              <button type="button" id="btnConfirmarRecarga" class="btn-primary" style="flex:1.5;">
-                Confirmar recarga
-              </button>
-            </div>
-          </div>
-
-          <!-- ── Paso 3: Simulación de Procesamiento ── -->
-          <div id="recargaStepProcessing" class="recarga-step hidden">
-            <div class="recarga-processing-box">
-              <div class="recarga-spinner-ring"></div>
-              <div class="recarga-processing-title">Procesando recarga...</div>
-              <p class="recarga-processing-sub" id="recargaProcessingSub">
-                Estamos conectando con el operador para acreditar tu saldo.
-              </p>
-            </div>
-          </div>
-
-          <!-- ── Paso 4: Pantalla de Éxito ── -->
-          <div id="recargaStepSuccess" class="recarga-step hidden">
-            <div class="recarga-result-card">
-              <div class="recarga-result-icon success">
-                <i class="fas fa-check"></i>
-              </div>
-              <h3 class="recarga-result-title">¡Recarga exitosa!</h3>
-              <p class="recarga-result-sub">Tu línea ya cuenta con el saldo acreditado correctamente.</p>
-
-              <div class="recarga-receipt-box">
-                <div class="receipt-code-badge">
-                  <span id="recargaSuccessComprobante">REC-000000</span>
-                  <button type="button" id="btnCopyComprobanteRecarga" class="receipt-copy-btn" title="Copiar comprobante">
-                    <i class="fas fa-copy"></i>
-                  </button>
-                </div>
-
-                <div class="recarga-receipt-row">
-                  <span class="label">Operador</span>
-                  <span class="value" id="recargaSuccessOp">Movistar</span>
-                </div>
-
-                <div class="recarga-receipt-row">
-                  <span class="label">Número</span>
-                  <span class="value" id="recargaSuccessTel">+54 9 11 2345-6789</span>
-                </div>
-
-                <div class="recarga-receipt-row">
-                  <span class="label">Monto recargado</span>
-                  <span class="value" id="recargaSuccessMonto" style="color:var(--green);">$ 0,00</span>
-                </div>
-
-                <div class="recarga-receipt-row">
-                  <span class="label">Nuevo saldo en cuenta</span>
-                  <span class="value" id="recargaSuccessSaldo">$ 0,00</span>
-                </div>
-
-                <div class="recarga-receipt-row">
-                  <span class="label">Fecha y hora</span>
-                  <span class="value" id="recargaSuccessFecha">—</span>
-                </div>
-              </div>
-
-              <div style="display:flex;gap:10px;width:100%;margin-top:6px;">
-                <button type="button" id="btnRecargaSuccessDescargar" class="btn-secondary" style="flex:1;">
-                  <i class="fas fa-download"></i> Descargar
-                </button>
-                <button type="button" id="btnRecargaSuccessNueva" class="btn-secondary" style="flex:1;">
-                  Otra recarga
-                </button>
-              </div>
-              <button type="button" id="btnRecargaSuccessListo" class="btn-primary" style="width:100%;">
-                Volver al inicio
-              </button>
-            </div>
-          </div>
-
-          <!-- ── Paso 5: Pantalla de Error (Saldo Insuficiente) ── -->
-          <div id="recargaStepError" class="recarga-step hidden">
-            <div class="recarga-result-card">
-              <div class="recarga-result-icon error">
-                <i class="fas fa-exclamation-triangle"></i>
-              </div>
-              <h3 class="recarga-result-title">Saldo insuficiente</h3>
-              <p class="recarga-result-sub" id="recargaErrorSub">
-                No disponés de fondos suficientes en tu cuenta para completar la recarga.
-              </p>
-
-              <div class="recarga-receipt-box">
-                <div class="recarga-receipt-row">
-                  <span class="label">Saldo disponible</span>
-                  <span class="value" id="recargaErrorSaldoDisp" style="color:var(--text);">$ 0,00</span>
-                </div>
-                <div class="recarga-receipt-row">
-                  <span class="label">Monto requerido</span>
-                  <span class="value" id="recargaErrorMontoReq" style="color:#ef4444;">$ 0,00</span>
-                </div>
-                <div class="recarga-receipt-row">
-                  <span class="label">Estado de la cuenta</span>
-                  <span class="value" style="color:var(--text-3);">Saldo sin modificaciones</span>
-                </div>
-              </div>
-
-              <div style="display:flex;gap:10px;width:100%;margin-top:6px;">
-                <button type="button" id="btnRecargaErrorCerrar" class="btn-secondary" style="flex:1;">
-                  Volver al inicio
-                </button>
-                <button type="button" id="btnRecargaErrorReintentar" class="btn-primary" style="flex:1;">
-                  Elegir otro monto
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- /recarga-panel-card -->
-
-        <!-- Columna lateral: Beneficios e Información -->
-        <div class="recarga-info-side">
-          <div class="recarga-promo-box">
-            <div class="promo-icon"><i class="fas fa-bolt"></i></div>
-            <h4>Acreditación inmediata</h4>
-            <p>El saldo se acredita en tu línea al instante tras confirmar el pago.</p>
-          </div>
-          <div class="recarga-promo-box">
-            <div class="promo-icon"><i class="fas fa-shield-alt"></i></div>
-            <h4>Sin costo adicional</h4>
-            <p>Recargá sin comisiones ni cargos extras desde tu cuenta NODO.</p>
-          </div>
-          <div class="recarga-promo-box">
-            <div class="promo-icon"><i class="fas fa-percentage"></i></div>
-            <h4>10% de reintegro</h4>
-            <p>Los miércoles tenés 10% de cashback en recargas de cualquier operador.</p>
-          </div>
-          <div class="recarga-promo-box" style="border-left:3px solid #019DF4;">
-            <div class="promo-icon" style="color:#019DF4;background:rgba(1,157,244,0.1);"><i class="fas fa-phone-alt"></i></div>
-            <h4>Formato de número</h4>
-            <p>10 dígitos con código de área, sin 0 ni 15. Ej: 11 2345-6789.</p>
-          </div>
-        </div>
-
-      </div><!-- /recarga-grid-container -->
-    </div><!-- /recargasSectionCard -->
-
-  </section><!-- /section-recargas -->
-
-  <!-- ══════════════ SECCIÓN: PAGOS DE SERVICIOS ══════════════ -->
-  <section id="section-servicios" class="content-section">
-    <div class="card" id="serviciosSectionCard">
-      <div class="card-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="recarga-header-icon" style="background:rgba(59,130,246,0.12);color:#60a5fa;">
-            <i class="fas fa-file-invoice-dollar"></i>
-          </div>
-          <div>
-            <h2 class="card-title" style="margin:0;">Pago de Servicios</h2>
-            <p style="font-size:0.8rem;color:var(--text-3);margin:0;">Pagá facturas y servicios en segundos</p>
-          </div>
-        </div>
-        <span id="serviciosSaldoDisponible" class="recarga-saldo-badge">Saldo: $ 0,00</span>
-      </div>
-
-      <div class="servicios-layout">
-        <div class="servicios-panel">
-          <div class="servicios-panel-header">
-            <h3>Categorías</h3>
-          </div>
-          <div id="serviciosCategorias" class="servicios-categorias"></div>
-        </div>
-
-        <div class="servicios-panel">
-          <div class="servicios-panel-header">
-            <h3>Proveedores</h3>
-          </div>
-          <div class="servicios-buscador-wrap">
-            <i class="fas fa-search"></i>
-            <input type="text" id="serviciosSearch" placeholder="Buscar proveedor o servicio" autocomplete="off">
-          </div>
-          <div id="serviciosProveedores" class="servicios-proveedores"></div>
-        </div>
-
-        <div class="servicios-panel servicios-panel-wide">
-          <div class="servicios-panel-header">
-            <h3>Pago</h3>
-          </div>
-          <div id="servicioDetalle" class="servicio-detalle empty">
-            <p>Elegí una categoría y un proveedor para comenzar.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section><!-- /section-servicios -->
-
-  <!-- ══════════════ SECCIÓN: REPORTES ══════════════ -->
-  <section id="section-reportes" class="content-section">
-    <div class="card reportes-card" id="reportesSectionCard">
-      <div class="card-header reportes-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="recarga-header-icon" style="background:rgba(14,165,233,0.12);color:#7dd3fc;">
-            <i class="fas fa-chart-column"></i>
-          </div>
-          <div>
-            <h2 class="card-title" style="margin:0;">Reportes</h2>
-            <p style="font-size:0.8rem;color:var(--text-3);margin:0;">Resumen financiero y movimiento por período</p>
-          </div>
-        </div>
-        <div class="reportes-actions">
-          <button type="button" class="btn-secondary btn-small" id="reportExportCsv">CSV</button>
-          <button type="button" class="btn-primary btn-small" id="reportExportPdf">PDF</button>
-        </div>
-      </div>
-
-      <div class="reportes-filters">
-        <div class="report-filter-group">
-          <label>Desde</label>
-          <input type="date" id="reporteDesde" />
-        </div>
-        <div class="report-filter-group">
-          <label>Hasta</label>
-          <input type="date" id="reporteHasta" />
-        </div>
-        <div class="report-filter-group">
-          <label>Tipo</label>
-          <select id="reporteTipo">
-            <option value="todos">Todos</option>
-          </select>
-        </div>
-        <div class="report-filter-group">
-          <label>Categoría</label>
-          <select id="reporteCategoria">
-            <option value="todos">Todas</option>
-          </select>
-        </div>
-        <div class="report-filter-group">
-          <label>Estado</label>
-          <select id="reporteEstado">
-            <option value="todos">Todos</option>
-            <option value="completado">Completado</option>
-            <option value="fallido">Fallido</option>
-            <option value="pendiente">Pendiente</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="reportesResumen" class="reportes-resumen"></div>
-
-      <div class="reportes-graphics">
-        <div class="report-chart-card">
-          <div class="report-chart-header">
-            <h3>Gastos por categoría</h3>
-          </div>
-          <div id="chartCategorias" class="report-chart-area"></div>
-        </div>
-
-        <div class="report-chart-card">
-          <div class="report-chart-header">
-            <h3>Evolución del gasto</h3>
-          </div>
-          <div id="chartTiempo" class="report-chart-area"></div>
-        </div>
-      </div>
-
-      <div class="reportes-table-wrap">
-        <div class="report-table-header">
-          <h3>Movimientos</h3>
-        </div>
-        <div id="reportesEmpty" class="report-empty hidden">
-          <i class="fas fa-search"></i>
-          <p>No hay movimientos para el rango y filtros seleccionados.</p>
-        </div>
-        <div id="reportesTableContainer" class="report-table-container"></div>
-      </div>
-    </div>
-  </section><!-- /section-reportes -->
-
-  <!-- ══════════════ SECCIÓN: SEGURIDAD ══════════════ -->
-  <section id="section-seguridad" class="content-section">
-    <div class="card seguridad-card" id="seguridadSectionCard">
-      <div class="card-header seguridad-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="recarga-header-icon" style="background:rgba(16,185,129,0.12);color:#6ee7b7;">
-            <i class="fas fa-shield-alt"></i>
-          </div>
-          <div>
-            <h2 class="card-title" style="margin:0;">Seguridad</h2>
-            <p style="font-size:0.8rem;color:var(--text-3);margin:0;">Protección y control de tu cuenta</p>
-          </div>
-        </div>
-        <span id="seguridadNivel" class="recarga-saldo-badge">Nivel: Básico</span>
-      </div>
-
-      <div class="seguridad-layout">
-        <div class="seguridad-panel seguridad-panel-wide">
-          <div class="seguridad-panel-header">
-            <h3>Estado general</h3>
-          </div>
-          <div class="seguridad-overview">
-            <div class="seguridad-score-wrap">
-              <div class="seguridad-score-ring">
-                <span id="seguridadScoreValue">45%</span>
-              </div>
-              <div class="seguridad-score-meta">
-                <strong id="seguridadNivelTexto">Básico</strong>
-                <p>Tu cuenta tiene protecciones básicas activas.</p>
-              </div>
-            </div>
-            <div id="seguridadChecklist" class="seguridad-checklist"></div>
-          </div>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Cambio de contraseña</h3>
-          </div>
-          <form id="seguridadPasswordForm" class="seguridad-form">
-            <div class="seguridad-field">
-              <label>Contraseña actual</label>
-              <input type="password" id="seguridadCurrentPassword" placeholder="Ingrese su contraseña actual" required>
-            </div>
-            <div class="seguridad-field">
-              <label>Nueva contraseña</label>
-              <input type="password" id="seguridadNewPassword" placeholder="Nueva contraseña" required>
-            </div>
-            <div class="seguridad-field">
-              <label>Confirmar nueva contraseña</label>
-              <input type="password" id="seguridadConfirmPassword" placeholder="Repita la nueva contraseña" required>
-            </div>
-            <div class="seguridad-strength-box">
-              <div class="seguridad-strength-head">
-                <span>Fortaleza</span>
-                <strong id="seguridadStrengthLabel">Débil</strong>
-              </div>
-              <div class="seguridad-strength-bar"><span id="seguridadStrengthBar"></span></div>
-            </div>
-            <button type="submit" class="btn-primary">Actualizar contraseña</button>
-          </form>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>2FA</h3>
-          </div>
-          <div class="seguridad-toggle-row">
-            <span>Autenticación en dos pasos</span>
-            <label class="seguridad-switch">
-              <input type="checkbox" id="seguridad2faToggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div id="seguridad2faPanel" class="seguridad-subpanel hidden">
-            <div class="seguridad-field">
-              <label>Método</label>
-              <select id="seguridad2faMethod">
-                <option value="sms">SMS</option>
-                <option value="email">Email</option>
-                <option value="app">App autenticadora</option>
-              </select>
-            </div>
-            <button type="button" id="seguridadConfig2faBtn" class="btn-secondary">Configurar 2FA</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="seguridad-layout secondary-grid">
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Preguntas de seguridad</h3>
-          </div>
-          <form id="seguridadQuestionsForm" class="seguridad-form compact-form">
-            <div class="seguridad-field">
-              <label>Pregunta 1</label>
-              <input type="text" id="seguridadQuestion1" placeholder="Ej: Nombre de tu primera mascota" required>
-            </div>
-            <div class="seguridad-field">
-              <label>Respuesta 1</label>
-              <input type="text" id="seguridadAnswer1" placeholder="Respuesta" required>
-            </div>
-            <div class="seguridad-field">
-              <label>Pregunta 2</label>
-              <input type="text" id="seguridadQuestion2" placeholder="Ej: Ciudad de nacimiento" required>
-            </div>
-            <div class="seguridad-field">
-              <label>Respuesta 2</label>
-              <input type="text" id="seguridadAnswer2" placeholder="Respuesta" required>
-            </div>
-            <button type="submit" class="btn-primary">Guardar preguntas</button>
-          </form>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Dispositivos y sesiones</h3>
-          </div>
-          <div id="seguridadSessionsList" class="seguridad-list"></div>
-          <div class="seguridad-actions-row">
-            <button type="button" id="seguridadCerrarSesionesBtn" class="btn-secondary">Cerrar otras sesiones</button>
-          </div>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Alertas y notificaciones</h3>
-          </div>
-          <div class="seguridad-toggle-list">
-            <div class="seguridad-toggle-row">
-              <span>Inicio de sesión desde nuevo dispositivo</span>
-              <label class="seguridad-switch"><input type="checkbox" id="alertNewDevice" checked><span class="slider"></span></label>
-            </div>
-            <div class="seguridad-toggle-row">
-              <span>Transacciones grandes</span>
-              <label class="seguridad-switch"><input type="checkbox" id="alertLargeTx" checked><span class="slider"></span></label>
-            </div>
-            <div class="seguridad-toggle-row">
-              <span>Cambios de datos personales</span>
-              <label class="seguridad-switch"><input type="checkbox" id="alertProfileChange" checked><span class="slider"></span></label>
-            </div>
-            <div class="seguridad-field">
-              <label>Canal</label>
-              <select id="seguridadAlertChannel">
-                <option value="email">Email</option>
-                <option value="sms">SMS</option>
-                <option value="push">Notificación push</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="seguridad-layout secondary-grid">
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Límites de transacciones</h3>
-          </div>
-          <form id="seguridadLimitsForm" class="seguridad-form compact-form">
-            <div class="seguridad-field">
-              <label>Límite diario</label>
-              <input type="number" id="seguridadDailyLimit" placeholder="50000" min="0">
-            </div>
-            <div class="seguridad-field">
-              <label>Límite mensual</label>
-              <input type="number" id="seguridadMonthlyLimit" placeholder="200000" min="0">
-            </div>
-            <div class="seguridad-field">
-              <label>Monto máximo por transacción</label>
-              <input type="number" id="seguridadPerTxLimit" placeholder="20000" min="0">
-            </div>
-            <button type="submit" class="btn-primary">Guardar límites</button>
-          </form>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Bloqueo de cuenta</h3>
-          </div>
-          <div class="seguridad-block-actions">
-            <button type="button" id="seguridadBlockAccountBtn" class="btn-secondary danger-btn">Bloquear cuenta</button>
-            <button type="button" id="seguridadBlockCardBtn" class="btn-secondary danger-btn">Bloquear tarjeta</button>
-            <button type="button" id="seguridadUnlockBtn" class="btn-primary hidden">Desbloquear</button>
-          </div>
-          <div id="seguridadBlockStatus" class="seguridad-status-badge">Cuenta desbloqueada</div>
-        </div>
-
-        <div class="seguridad-panel">
-          <div class="seguridad-panel-header">
-            <h3>Historial de actividad</h3>
-          </div>
-          <div id="seguridadHistoryList" class="seguridad-history-list"></div>
-        </div>
-      </div>
-    </div>
-  </section><!-- /section-seguridad -->
 
   <!-- Modal de transferencia -->
   <div id="transferModal" class="modal hidden">
@@ -1412,7 +1236,7 @@
       <div id="transferStep1">
         <div class="transfer-modal-header">
           <h2 class="transfer-modal-title">¿A quién le transferís?</h2>
-          <button id="closeTransferModal" class="modal-close-btn"><i class="fas fa-times"></i></button>
+          <button id="closeTransferModal" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="transfer-search-wrap">
           <i class="fas fa-search"></i>
@@ -1440,7 +1264,7 @@
         <div class="transfer-modal-header">
           <button id="backToStep1Btn" class="btn-back-step"><i class="fas fa-arrow-left"></i></button>
           <h2 class="transfer-modal-title">Transferir</h2>
-          <button id="closeTransferModal2" class="modal-close-btn"><i class="fas fa-times"></i></button>
+          <button id="closeTransferModal2" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
         </div>
         <div class="recipient-preview" id="recipientPreview"></div>
         <form id="transferForm" class="styled-form">
@@ -1495,9 +1319,20 @@
     <div class="transfer-modal-card" style="max-width:400px;">
       <div class="transfer-modal-header">
         <h2 class="transfer-modal-title" id="reservaDetailNombre">Reserva</h2>
-        <button id="closeReservaDetail" class="modal-close-btn"><i class="fas fa-times"></i></button>
+        <button id="closeReservaDetail" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <div id="reservaDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- Modal Detalle Plazo Fijo -->
+  <div id="pfDetailModal" class="modal hidden">
+    <div class="transfer-modal-card" style="max-width:420px;">
+      <div class="transfer-modal-header">
+        <h2 class="transfer-modal-title">Detalle de Plazo Fijo</h2>
+        <button id="closePFDetail" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+      </div>
+      <div id="pfDetailBody"></div>
     </div>
   </div>
 
@@ -1506,13 +1341,25 @@
     <div class="transfer-modal-card" style="max-width:400px;">
       <div class="transfer-modal-header">
         <h2 class="transfer-modal-title">Editar Perfil</h2>
-        <button id="cancelPerfilBtn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+        <button id="cancelPerfilBtn" class="modal-close-btn modal-close-btn--centered" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <form id="perfilForm" class="styled-form">
-        <input type="text" id="perfilNombre"    placeholder="Nombre">
-        <input type="text" id="perfilApellido"  placeholder="Apellido">
-        <input type="tel" id="perfilTelefono" placeholder="Teléfono" maxlength="12" inputmode="numeric">
-        <input type="text" id="perfilDireccion" placeholder="Dirección">
+        <div class="form-field">
+          <label for="perfilNombre" class="form-label">Nombre</label>
+          <input type="text" id="perfilNombre" class="form-input-labeled" placeholder="Tu nombre">
+        </div>
+        <div class="form-field">
+          <label for="perfilApellido" class="form-label">Apellido</label>
+          <input type="text" id="perfilApellido" class="form-input-labeled" placeholder="Tu apellido">
+        </div>
+        <div class="form-field">
+          <label for="perfilTelefono" class="form-label">Teléfono</label>
+          <input type="text" id="perfilTelefono" class="form-input-labeled" placeholder="Ej: +54 9 11 1234 5678">
+        </div>
+        <div class="form-field">
+          <label for="perfilDireccion" class="form-label">Dirección</label>
+          <input type="text" id="perfilDireccion" class="form-input-labeled" placeholder="Tu dirección">
+        </div>
         <button type="submit" class="btn-primary">Guardar</button>
       </form>
     </div>
@@ -1523,7 +1370,7 @@
     <div class="transfer-modal-card" style="max-width:400px;">
       <div class="transfer-modal-header">
         <h2 class="transfer-modal-title">Cambiar Alias</h2>
-        <button id="cancelAliasBtn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+        <button id="cancelAliasBtn" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <p style="font-size:0.78rem;color:var(--text-3);margin-bottom:16px;">Solo letras minúsculas, números, puntos y guiones.</p>
       <form id="aliasForm" class="styled-form">
@@ -1538,12 +1385,14 @@
     <div class="transfer-modal-card" style="max-width:400px;">
       <div class="transfer-modal-header">
         <h2 class="transfer-modal-title">Cambiar Contraseña</h2>
-        <button id="cancelPasswordBtn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+        <button id="cancelPasswordBtn" class="modal-close-btn" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <form id="passwordForm" class="styled-form">
         <input type="password" id="currentPassword" placeholder="Contraseña actual" required>
-        <input type="password" id="newPassword"     placeholder="Nueva contraseña" required>
-        <button type="submit" class="btn-primary">Actualizar</button>
+        <input type="password" id="newPassword"     placeholder="Nueva contraseña" required autocomplete="new-password">
+        <input type="password" id="confirmPassword" placeholder="Confirmar nueva contraseña" required autocomplete="new-password">
+        <p id="passwordMismatch" class="form-hint-error hidden" role="alert">Las contraseñas no coinciden.</p>
+        <button type="submit" class="btn-primary" id="passwordSubmitBtn" disabled>Actualizar</button>
       </form>
     </div>
   </div>
@@ -1556,14 +1405,14 @@
     <div id="aiChatWindow" class="ai-window hidden">
       <div class="ai-header">
         <span><i class="fas fa-robot"></i> Asistente Nodo</span>
-        <button id="aiClose" style="background:transparent;border:none;color:rgba(255,255,255,0.6);font-size:1rem;padding:0;"><i class="fas fa-times"></i></button>
+        <button id="aiClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
       </div>
       <div id="aiMessages" class="ai-messages">
         <div class="msg bot">¡Hola! Soy tu asistente de Nodo. ¿En qué puedo ayudarte?</div>
       </div>
       <div class="ai-input">
         <input type="text" id="aiQuery" placeholder="Preguntame algo...">
-        <button id="aiSend" style="padding:8px 12px;font-size:0.8rem;"><i class="fas fa-paper-plane"></i></button>
+        <button id="aiSend"><i class="fas fa-paper-plane"></i></button>
       </div>
     </div>
   </div>
@@ -1609,25 +1458,77 @@
 
 <!-- Modal escáner QR -->
 <div id="qrScannerModal" class="modal hidden">
-  <div class="modal-content card" style="max-width:480px;width:100%;">
-    <p style="font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:16px;">Escanear QR</p>
-    <div id="reader" style="width:100%;min-height:280px;border-radius:var(--r);overflow:hidden;"></div>
-    <p style="font-size:0.78rem;color:var(--text-3);margin-top:12px;text-align:center;">Apuntá la cámara al código QR de Nodo</p>
-    <button onclick="stopScanner()" class="btn-logout" style="width:100%;margin-top:12px;">Cancelar</button>
+  <div class="modal-content card" style="max-width:480px;width:100%;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <p style="font-weight:700;font-size:1rem;color:var(--navy);margin:0;">Escanear QR</p>
+      <button onclick="stopScanner()" style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:1.1rem;" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <div style="position:relative;">
+      <div id="reader" style="width:100%;min-height:280px;border-radius:var(--r);overflow:hidden;"></div>
+      <!-- Overlay para advertencia / error -->
+      <div id="qrScanOverlay" hidden style="position:absolute;inset:0;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center;font-size:0.84rem;font-weight:600;"></div>
+    </div>
+    <p style="font-size:0.75rem;color:var(--text-3);margin-top:10px;text-align:center;">Compatible con QR de cualquier banco del sistema</p>
+    <button onclick="stopScanner()" class="btn-logout" style="width:100%;margin-top:10px;">Cancelar</button>
   </div>
 </div>
 
-<!-- Modal generar QR -->
+<!-- Modal generar QR (Cobrar) -->
 <div id="qrGeneratorModal" class="modal hidden">
-  <div class="modal-content card" style="max-width:380px;width:100%;text-align:center;">
-    <p style="font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:4px;">Tu código de cobro</p>
-    <p style="font-size:0.8rem;color:var(--text-3);margin-bottom:20px;">Mostrá este QR para recibir dinero</p>
-    <div id="qrcode-container" style="display:flex;justify-content:center;margin:0 0 20px;padding:20px;background:white;border-radius:var(--r);border:1.5px solid var(--border);"></div>
-    <div style="background:var(--bg);padding:12px 16px;border-radius:var(--r-sm);text-align:left;margin-bottom:16px;">
-      <p style="font-size:0.66rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:4px;font-weight:600;">CBU / Alias</p>
-      <p id="qrAccountDetail" style="font-weight:700;font-size:0.86rem;color:var(--text);"></p>
+  <div class="modal-content card" style="max-width:400px;width:100%;text-align:center;">
+
+    <!-- Paso 1: configurar monto y moneda -->
+    <div id="qrStep1">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <p style="font-weight:700;font-size:1rem;color:var(--navy);margin:0;">Generar QR para cobrar</p>
+        <button id="btnCloseQrGenerator" style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:1.1rem;" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Selector de moneda -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="qrMonedaARS" class="qr-moneda-btn active">$ Pesos (ARS)</button>
+        <button id="qrMonedaUSD" class="qr-moneda-btn">U$D Dólares</button>
+      </div>
+
+      <!-- Monto opcional -->
+      <div style="margin-bottom:14px;text-align:left;">
+        <label style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);display:block;margin-bottom:6px;">Monto (opcional)</label>
+        <input id="qrMonto" type="number" min="0" step="0.01" placeholder="Dejá vacío para que lo ingrese el pagador"
+          style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:0.9rem;background:var(--bg);color:var(--text);box-sizing:border-box;">
+      </div>
+
+      <!-- CBU/Alias info -->
+      <div style="background:var(--bg);padding:10px 14px;border-radius:var(--r-sm);text-align:left;margin-bottom:18px;">
+        <p style="font-size:0.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);margin-bottom:3px;font-weight:600;">Cuenta destino</p>
+        <p id="qrAccountDetail" style="font-weight:700;font-size:0.84rem;color:var(--text);margin:0;"></p>
+      </div>
+
+      <button id="btnGenerarQR" class="btn-primary" style="width:100%;">Generar QR</button>
     </div>
-    <button onclick="document.getElementById('qrGeneratorModal').classList.add('hidden')" class="btn-primary">Cerrar</button>
+
+    <!-- Paso 2: mostrar QR -->
+    <div id="qrStep2" hidden>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <button id="btnQrBack" style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:1rem;"><i class="fas fa-arrow-left"></i></button>
+        <p style="font-weight:700;font-size:1rem;color:var(--navy);margin:0;flex:1;">Tu código de cobro</p>
+      </div>
+
+      <div id="qrcode-container" style="display:flex;justify-content:center;margin:0 0 14px;padding:18px;background:white;border-radius:var(--r);border:1.5px solid var(--border);"></div>
+
+      <div style="background:var(--bg);padding:10px 14px;border-radius:var(--r-sm);text-align:left;margin-bottom:12px;">
+        <p style="font-size:0.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);margin-bottom:3px;font-weight:600;">Cuenta · Monto</p>
+        <p style="font-weight:700;font-size:0.84rem;color:var(--text);margin:0 0 2px;" id="qrAccountDetail2"></p>
+        <p id="qrInfoMonto" style="font-size:0.78rem;color:var(--text-3);margin:0;"></p>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button id="btnCopiarQR" class="btn-secondary" style="flex:1;"><i class="fas fa-copy"></i> Copiar código</button>
+        <button id="btnCompartirQR" class="btn-secondary" style="flex:1;"><i class="fas fa-share-alt"></i> Compartir</button>
+      </div>
+      <p style="font-size:0.7rem;color:var(--text-3);margin:0 0 10px;">Válido por 10 minutos · Compatible con todos los bancos del sistema</p>
+      <button id="btnCloseQrGenerator2" onclick="document.getElementById('qrGeneratorModal').classList.add('hidden')" class="btn-primary" style="width:100%;">Cerrar</button>
+    </div>
+
   </div>
 </div>
 
@@ -1670,12 +1571,23 @@
 <script src="./js/reservas.js"></script>
 <script src="./js/finanzas.js"></script>
 <script src="./js/ia.js"></script>
+<script src="./js/bankKeys.js"></script>
 <script src="./js/qr.js"></script>
 <script src="./js/prestamos.js"></script>
+<script src="./js/tour.js"></script>
+<script src="./js/inversiones.js"></script>
 <script src="./js/recarga.js"></script>
+<script src="./js/tours.js"></script>
 <script src="./js/main.js"></script>
 <script>
   window.dashNet = initNetwork(document.getElementById('dashNetwork'), { color: () => localStorage.getItem('nodo_theme') === 'dark' ? 'rgba(148,163,184,' : 'rgba(30,41,59,', count: 65, maxDist: 155, speed: 0.2, nodeOpacity: 0.55, lineOpacity: 0.28 });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>

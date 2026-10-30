@@ -4,9 +4,15 @@
 :root {
   --navy:      #0B1120;
   --navy-2:    #162033;
-  --green:     #10B981;
-  --green-2:   #059669;
-  --green-dim: rgba(16,185,129,0.1);
+  /* Hero de saldo: gradiente adaptable al tema */
+  --hero-bg-1: #1e3a5f;
+  --hero-bg-2: #162f52;
+  --hero-bg-3: #1e3a5f;
+  --green:     #0891B2;
+  --green-2:   #0E7490;
+  --green-dim: rgba(6,182,212,0.1);
+  /* Verde semántico: solo dinero que entra, ganancias y éxito */
+  --pos:       #047857;
   --bg:        #E9EDF4;
   --surface:   #FFFFFF;
   --text:      #0F172A;
@@ -20,6 +26,23 @@
   --sh-sm:     0 1px 4px rgba(11,17,32,0.06), 0 1px 2px rgba(11,17,32,0.04);
   --sh:        0 4px 24px rgba(11,17,32,0.07);
   --sh-lg:     0 12px 48px rgba(11,17,32,0.12);
+  /* Aliases para código legado que usa estos nombres */
+  --text-primary:   #0F172A;
+  --text-secondary: #4B5563;
+  --bg-card:        #FFFFFF;
+  --header-bg:      #0B1120;
+}
+
+[data-theme="dark"] {
+  --pos:            #34D399;
+  --text-primary:   var(--text);
+  --text-secondary: var(--text-2);
+  --bg-card:        var(--surface);
+  --header-bg:      var(--navy);
+  /* Hero: colores originales (muy oscuros) en modo oscuro */
+  --hero-bg-1: #0D1B2E;
+  --hero-bg-2: #091628;
+  --hero-bg-3: #0F1E34;
 }
 
 /* ── Reset ── */
@@ -43,6 +66,63 @@ button {
   line-height: inherit;
   color: inherit;
   padding: 0;
+}
+
+/* Anillo de foco para navegación por teclado (reemplaza outline:none) */
+button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Form elements — estilos base consistentes con NODO ── */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]),
+textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"])::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]):focus,
+textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(6,182,212,0.12);
+}
+
+select {
+  width: 100%;
+  padding: 11px 36px 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%239CA3AF' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(6,182,212,0.12);
 }
 
 /* ── Utils ── */

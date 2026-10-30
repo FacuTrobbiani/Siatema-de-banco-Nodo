@@ -3,7 +3,7 @@
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   background: var(--surface);
   padding: 12px 20px;
@@ -13,34 +13,15 @@
   z-index: 10;
 }
 
-.header-left,
-.header-user { display: flex; align-items: center; }
+.header-user { display: flex; align-items: center; gap: 12px; }
 
-.header-left { gap: 12px; }
-.header-user { gap: 12px; }
-
-.header-greeting {
-  color: var(--text);
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-.header-greeting > span { display: inline-block; }
-
-#userName { font-weight: 700; color: var(--green-2); }
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  cursor: pointer;
-}
+#userName { font-weight: 600; font-size: 0.88rem; color: var(--text); }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    BALANCE HERO
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .balance-hero {
-  background: linear-gradient(140deg, #0D1B2E 0%, #091628 55%, #0F1E34 100%);
+  background: linear-gradient(140deg, #1e3a5f 0%, #162f52 55%, #1e3a5f 100%);
   border-radius: var(--r-xl);
   padding: 28px 32px;
   color: white;
@@ -52,6 +33,57 @@
   gap: 20px;
 }
 
+/* Dark mode: gradiente original oscuro */
+[data-theme="dark"] .balance-hero {
+  background: linear-gradient(140deg, #0D1B2E 0%, #091628 55%, #0F1E34 100%);
+}
+
+/* Light mode: card clara con tokens del tema (los textos internos eran blancos fijos) */
+[data-theme="light"] .balance-hero {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--sh);
+}
+[data-theme="light"] .hero-tabs,
+[data-theme="light"] .balance-actions,
+[data-theme="light"] .usd-cotizaciones      { border-color: var(--border); }
+[data-theme="light"] .hero-tab              { color: var(--text-2); }
+[data-theme="light"] .hero-tab:not(.active):hover { color: var(--text); }
+/* #047857: verde con contraste AA sobre blanco (el #10B981 da ~2.5:1) */
+[data-theme="light"] .hero-tab.active,
+[data-theme="light"] .hero-tab.active .hero-tab-symbol { color: #0E7490; }
+[data-theme="light"] .eyebrow,
+[data-theme="light"] .balance-sub,
+[data-theme="light"] .account-info-label,
+[data-theme="light"] .usd-equiv,
+[data-theme="light"] .cotiz-label,
+[data-theme="light"] .cotiz-sub             { color: var(--text-2); }
+[data-theme="light"] .account-info-value,
+[data-theme="light"] .cotiz-val             { color: var(--text); }
+[data-theme="light"] .cotiz-venta .cotiz-val { color: #0E7490; }
+[data-theme="light"] .cotiz-row             { background: var(--bg); }
+[data-theme="light"] .btn-toggle,
+[data-theme="light"] .btn-copy-light,
+[data-theme="light"] .hero-moneda-tag       { background: var(--bg); color: var(--text-2); }
+[data-theme="light"] .btn-toggle:hover      { background: var(--border); }
+[data-theme="light"] .hero-moneda-usd       { background: rgba(6,182,212,.12); color: #0E7490; }
+[data-theme="light"] .action-card {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text);
+}
+[data-theme="light"] .action-card:hover     { background: var(--border); color: var(--text); border-color: var(--border); }
+[data-theme="light"] #displayBalance.balance-flash-up   { animation-name: flash-up-light; }
+[data-theme="light"] #displayBalance.balance-flash-down { animation-name: flash-down-light; }
+@keyframes flash-up-light {
+  0%, 65% { color: #047857; }
+  100%    { color: var(--text); }
+}
+@keyframes flash-down-light {
+  0%, 65% { color: #DC2626; }
+  100%    { color: var(--text); }
+}
 
 .balance-top {
   display: flex;
@@ -113,8 +145,8 @@
   transition: color 0.18s, border-color 0.18s;
 }
 .hero-tab.active {
-  color: #34d399;
-  border-bottom-color: #34d399;
+  color: var(--green);
+  border-bottom-color: var(--green);
   font-weight: 700;
 }
 .hero-tab:not(.active):hover {
@@ -127,7 +159,7 @@
   font-size: 0.7rem;
   opacity: 0.7;
 }
-.hero-tab.active .hero-tab-symbol { opacity: 1; color: #34d399; }
+.hero-tab.active .hero-tab-symbol { opacity: 1; color: var(--green); }
 
 /* Botones de acciÃ³n USD: 3 items distribuidos al 100% del ancho */
 .balance-actions-usd .action-card {
@@ -244,7 +276,7 @@
 }
 
 .btn-copy-light:hover {
-  background: rgba(16,185,129,0.22);
+  background: rgba(6,182,212,0.22);
   color: var(--green);
   opacity: 1;
   transform: none;
@@ -278,11 +310,12 @@
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.action-card i { font-size: 1rem; }
+.action-card i { font-size: 1.15rem; }
 
 .action-card:hover {
-  background: rgba(51,65,85,0.5);
-  color: rgba(255,255,255,0.9);
+  background: rgba(51,65,85,0.65);
+  color: rgba(255,255,255,0.95);
+  border-color: rgba(255,255,255,0.12);
   opacity: 1;
   transform: none;
 }
@@ -324,7 +357,7 @@
   padding: 2px 7px; border-radius: 999px;
   background: rgba(255,255,255,.15); color: rgba(255,255,255,.85);
 }
-.hero-moneda-usd { background: rgba(16,185,129,.25); color: #6ee7b7; }
+.hero-moneda-usd { background: rgba(6,182,212,.25); color: #67E8F9; }
 
 /* â”€â”€ USD equiv â”€â”€ */
 .usd-equiv { display: block; font-size: .75rem; color: rgba(255,255,255,.6); margin-top: 4px; }
@@ -389,7 +422,7 @@
   font-variant-numeric: tabular-nums;
   color: rgba(255,255,255,.8);
 }
-.cotiz-venta .cotiz-val { color: #6ee7b7; }
+.cotiz-venta .cotiz-val { color: #67E8F9; }
 
 /* â”€â”€ Mini-historial en hero ARS â”€â”€ */
 .hero-movimientos {

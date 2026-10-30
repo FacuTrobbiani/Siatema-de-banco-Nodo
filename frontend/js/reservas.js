@@ -11,28 +11,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   closeReservaDetail?.addEventListener("click", () => reservaDetailModal?.classList.add("hidden"));
   reservaDetailModal?.addEventListener("click", e => { if (e.target === reservaDetailModal) reservaDetailModal.classList.add("hidden"); });
 
-  // ── Lógica financiera con interés compuesto diario ──
+  // ── Lógica financiera con interés simple diario (Base 365) ──
   const TASA_RESERVA   = 0.18;
-  const _r             = TASA_RESERVA / 365; // tasa diaria compuesta
+  const _r             = TASA_RESERVA / 365; // tasa diaria
   const _diasCompletos = (res) => Math.max(0, Math.floor((new Date() - new Date(res.fecha_creacion)) / 86400000));
   const _fmt2          = (n) => n.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  // Capital × (1+r)^n
-  const _compound = (monto, dias) => monto * Math.pow(1 + _r, dias);
-
-  // Ganancia del día n desde el depósito (1-indexado): C×(1+r)^(n-1)×r
-  const _gananciaEnDia = (monto, dia) => monto * Math.pow(1 + _r, dia - 1) * _r;
+  // Rendimiento diario constante: monto × (TNA/365)
+  const _gananciaEnDia = (monto, _dia) => monto * _r;
 
   const _interesAcum = (res) => {
     const monto = Number(res.monto);
     const dias  = _diasCompletos(res);
-    return _compound(monto, dias) - monto;
+    return monto * _r * dias;
   };
 
   const _valorActual = (res) => {
     const monto = Number(res.monto);
     const dias  = _diasCompletos(res);
-    return _compound(monto, dias);
+    return monto + monto * _r * dias;
   };
 
   const _calcProyeccion = (res) => {
@@ -43,12 +40,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const diasAcum  = _diasCompletos(res);
     // Días totales desde creación hasta vencimiento (al menos los ya transcurridos)
     const diasTotal = Math.max(Math.round((venc - new Date(res.fecha_creacion)) / 86400000), diasAcum);
-    const valorAct  = _compound(monto, diasAcum);
-    const interesAc = valorAct - monto;
-    // Rendimiento de HOY (día diasAcum, o primer día si aún no acreditó)
-    const gananciaHoy = diasAcum > 0 ? _gananciaEnDia(monto, diasAcum) : monto * _r;
-    // Total proyectado al vencimiento usando compuesto completo
-    const total     = _compound(monto, diasTotal);
+    const interesAc = monto * _r * diasAcum;
+    const valorAct  = monto + interesAc;
+    // Rendimiento diario: constante todos los días
+    const gananciaHoy = monto * _r;
+    // Total proyectado al vencimiento con interés simple
+    const total     = monto + monto * _r * diasTotal;
     return {
       diasRest,
       gananciaDiaria: gananciaHoy,
@@ -70,7 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const fecha = new Date(hoy);
       fecha.setDate(fecha.getDate() - i);
       return {
-        label:   i === 0 ? "Hoy" : fecha.toLocaleDateString("es-AR", { day: "2-digit", month: "short" }),
+        label:   i === 0 ? `Hoy, ${fecha.toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`
+               : i === 1 ? `Ayer, ${fecha.toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`
+               : fecha.toLocaleDateString("es-AR", { day: "2-digit", month: "short" }),
         ganancia: _gananciaEnDia(monto, diaDesdeInicio),
       };
     });
@@ -84,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const body      = document.getElementById("reservaDetailBody");
     if (body) {
       body.innerHTML = `
-        <div class="reserva-tna-badge"><i class="fas fa-chart-line"></i> Rindiendo al ${(TASA_RESERVA * 100).toFixed(0)}% TNA compuesto</div>
+        <div class="reserva-tna-badge"><i class="fas fa-chart-line"></i> Rindiendo al ${(TASA_RESERVA * 100).toFixed(0)}% TNA</div>
         <div class="reserva-detail-hero">
           <span class="reserva-detail-hero-label">${finalizado ? "Valor final" : "Valor actual"}</span>
           <span class="reserva-detail-hero-monto">$${_fmt2(valorActual)}</span>
@@ -101,6 +100,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
           <p class="reserva-detail-date"><i class="far fa-calendar-alt"></i> ${finalizado ? "Venció el" : "Vence el"} ${new Date(res.fecha_vencimiento).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}</p>
         </div>
+        <div class="reserva-modal-acciones">
+          <button class="btn-secondary reserva-accion-btn" id="reservaIngresarBtn"><i class="fas fa-plus-circle"></i> Ingresar más</button>
+          <button class="btn-danger reserva-accion-btn" id="reservaRescatarBtn"><i class="fas fa-hand-holding-usd"></i> Retirar reserva</button>
+        </div>
         ${historial.length > 0 ? `
         <div class="reserva-historial-wrap">
           <button class="reserva-historial-toggle" id="rvHistorialBtn" aria-expanded="false">
@@ -108,14 +111,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span>Historial de rendimientos (${historial.length} días)</span>
             <i class="fas fa-chevron-down reserva-historial-chevron"></i>
           </button>
-          <ul class="reserva-historial-list hidden" id="rvHistorialList">
+          <ul class="reserva-historial-list" id="rvHistorialList">
             ${historial.map(e => `<li class="reserva-historial-item"><span class="reserva-historial-fecha">${e.label}</span><span class="reserva-historial-ganancia amount-positive">+$${_fmt2(e.ganancia)}</span></li>`).join("")}
           </ul>
-        </div>` : ""}
-        <div class="reserva-modal-acciones">
-          <button class="btn-secondary reserva-accion-btn" id="reservaIngresarBtn"><i class="fas fa-plus-circle"></i> Ingresar más</button>
-          <button class="btn-danger reserva-accion-btn" id="reservaRescatarBtn"><i class="fas fa-hand-holding-usd"></i> Retirar reserva</button>
-        </div>`;
+        </div>` : ""}`;
 
       document.getElementById("rvHistorialBtn")?.addEventListener("click", () => {
         const list = document.getElementById("rvHistorialList");
@@ -123,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const open = btn.getAttribute("aria-expanded") === "true";
         btn.setAttribute("aria-expanded", String(!open));
         btn.querySelector(".reserva-historial-chevron")?.classList.toggle("rotated", !open);
-        list?.classList.toggle("hidden", open);
+        list?.classList.toggle("open", !open);
       });
 
       document.getElementById("reservaIngresarBtn")?.addEventListener("click", () => {
@@ -171,8 +170,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     reservasList.innerHTML = reservas.map(res => {
       const diasAcum       = _diasCompletos(res);
       const monto          = Number(res.monto);
-      const valorActual    = _compound(monto, diasAcum);
-      const gananciaDiaria = diasAcum > 0 ? _gananciaEnDia(monto, diasAcum) : monto * _r;
+      const valorActual    = monto + monto * _r * diasAcum;
+      const gananciaDiaria = monto * _r;
       return `
         <li class="reserva-item" data-id="${res.id}">
           <div class="reserva-item-top">

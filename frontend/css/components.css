@@ -58,14 +58,14 @@
   font-family: 'Montserrat', sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .operation-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--text);
   margin-bottom: 20px;
   display: flex;
   align-items: center;
@@ -114,11 +114,11 @@
   flex-shrink: 0;
 }
 
-.mov-icon.amount-positive { background: rgba(5,150,105,0.08); color: var(--green-2); }
+.mov-icon.amount-positive { background: rgba(5,150,105,0.08); color: var(--pos); }
 .mov-text b   { display: block; font-size: 0.86rem; font-weight: 600; color: var(--text); }
 .mov-text span { font-size: 0.76rem; color: var(--text-3); }
 .mov-amount   { font-weight: 700; font-size: 0.9rem; color: var(--text); }
-.amount-positive { color: var(--green-2); }
+.amount-positive { color: var(--pos); }
 
 .loader { text-align: center; padding: 32px; color: var(--text-3); font-size: 0.86rem; }
 
@@ -135,8 +135,6 @@
   padding: 6px 10px;
   border-radius: var(--r-sm);
 }
-
-.header-greeting { cursor: default; }
 
 .user-chevron {
   font-size: 0.68rem;
@@ -205,7 +203,7 @@
   cursor: pointer;
 }
 
-.tool-btn:hover { background: var(--green-dim); color: var(--green-2); border-color: rgba(16,185,129,0.25); opacity: 1; transform: none; }
+.tool-btn:hover { background: var(--green-dim); color: var(--green-2); border-color: rgba(6,182,212,0.25); opacity: 1; transform: none; }
 .tool-btn i { font-size: 1.1rem; }
 .tool-btn-logout:hover { background: rgba(239,68,68,0.08); color: #ef4444; border-color: rgba(239,68,68,0.25); }
 
@@ -270,8 +268,10 @@
   justify-content: center;
   overflow: hidden;
   font-size: 0.85rem;
-  border: 2px solid var(--green);
+  border: 2px solid rgba(6,182,212,.4);
+  transition: border-color .2s;
 }
+.avatar-wrapper:hover .avatar-circle { border-color: rgba(6,182,212,.8); }
 
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -289,9 +289,11 @@
   cursor: pointer;
   font-size: 0.44rem;
   color: var(--navy);
+  opacity: 0;
+  transition: opacity .2s;
 }
-
-.avatar-edit-btn:hover { background: white; box-shadow: 0 0 0 2px var(--green); }
+.avatar-wrapper:hover .avatar-edit-btn { opacity: 1; }
+.avatar-edit-btn:hover { background: white; }
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    PROFILE (in dropdown)
@@ -351,7 +353,7 @@
   margin: 12px 0 4px;
 }
 
-#receiptAmount { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 700; color: var(--navy); }
+#receiptAmount { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 700; color: var(--text); }
 .receipt-body  { text-align: left; }
 .receipt-date  { font-size: 0.78rem; color: var(--text-2); text-align: center; margin-bottom: 20px; }
 .receipt-section { margin-bottom: 16px; }
@@ -367,7 +369,7 @@
 .btn-receipt-action {
   flex: 1;
   background: var(--bg);
-  color: var(--navy);
+  color: var(--text);
   border: 1.5px solid var(--border);
   padding: 11px;
   font-size: 0.84rem;
@@ -381,7 +383,7 @@
 .btn-receipt-action:hover {
   background: var(--green-dim);
   color: var(--green-2);
-  border-color: rgba(16,185,129,0.3);
+  border-color: rgba(6,182,212,0.3);
   opacity: 1;
   transform: none;
 }
@@ -399,16 +401,16 @@ button:active { transform: translateY(0); }
   justify-content: center;
   gap: 7px;
   background: var(--green);
-  color: var(--navy);
+  color: #fff;
   border-radius: var(--r-sm);
   padding: 13px;
   font-size: 0.92rem;
   font-weight: 700;
   width: 100%;
   transition: background 0.18s, box-shadow 0.18s, opacity 0.18s, transform 0.12s;
-  box-shadow: 0 4px 14px rgba(16,185,129,0.28);
+  box-shadow: 0 4px 14px rgba(6,182,212,0.28);
 }
-.btn-primary:hover    { background: var(--green-2); opacity: 1; box-shadow: 0 6px 20px rgba(16,185,129,0.38); }
+.btn-primary:hover    { background: var(--green-2); opacity: 1; box-shadow: 0 6px 20px rgba(6,182,212,0.38); }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-secondary {

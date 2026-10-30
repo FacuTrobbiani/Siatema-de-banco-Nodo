@@ -1,6 +1,53 @@
-// ── Indicador de perfil incompleto (módulo scope — usada también en perfil.js) ──
+// ── Indicador de perfil (módulo scope — usada también en perfil.js) ──
 const actualizarIndicadorPerfil = () => {
   const u = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Calcular completitud
+  const campos = ["nombre", "apellido", "telefono", "direccion", "email"];
+  const rellenos = campos.filter(c => u[c] && String(u[c]).trim()).length;
+  const pct = Math.round((rellenos / campos.length) * 100);
+
+  // Iniciales en el dropdown
+  const initials = [u.nombre, u.apellido].filter(Boolean).map(s => s[0].toUpperCase()).join("") || "?";
+  const initialsEl = document.getElementById("avatarInitialsDrop");
+  if (initialsEl) initialsEl.textContent = initials;
+
+  // Saludo: primer nombre
+  const firstNameEl = document.getElementById("udropFirstName");
+  if (firstNameEl && u.nombre) firstNameEl.textContent = u.nombre;
+
+  // Nombre completo, email y alias en la sección de info
+  const fullNameEl = document.getElementById("udropFullName");
+  if (fullNameEl) fullNameEl.textContent = `${u.nombre || ""} ${u.apellido || ""}`.trim() || "—";
+  const emailEl = document.getElementById("udropEmail");
+  if (emailEl) emailEl.textContent = u.email || "—";
+
+  // Alias: intentar desde displayAlias (cargado por saldo.js)
+  const aliasDisplay = document.getElementById("displayAlias");
+  const aliasVal = aliasDisplay?.dataset.value || aliasDisplay?.textContent || "";
+  const aliasValEl = document.getElementById("udropAliasVal");
+  if (aliasValEl) aliasValEl.textContent = aliasVal || "—";
+
+  // Compatibilidad: udropName (hidden)
+  const nameEl = document.getElementById("udropName");
+  if (nameEl && u.nombre) nameEl.textContent = `${u.nombre} ${u.apellido || ""}`.trim();
+
+  // Barra de progreso
+  const pctEl  = document.getElementById("udropPct");
+  const fillEl = document.getElementById("udropFill");
+  if (pctEl)  pctEl.textContent  = `${pct}%`;
+  if (fillEl) fillEl.style.width = `${pct}%`;
+
+  // Foto de avatar en dropdown (si existe)
+  const imgDrop = document.getElementById("avatarImgDrop");
+  const imgMain = document.getElementById("avatarImg");
+  if (imgDrop && imgMain && !imgMain.classList.contains("hidden")) {
+    imgDrop.src = imgMain.src;
+    imgDrop.classList.remove("hidden");
+    if (initialsEl) initialsEl.classList.add("hidden");
+  }
+
+  // Notificación si perfil incompleto
   const incompleto = !u.telefono || !u.direccion;
   document.getElementById("loadPerfilBtn")?.classList.toggle("has-notification", incompleto);
   const avatarWrapper = document.querySelector(".avatar-wrapper");
@@ -12,18 +59,6 @@ const actualizarIndicadorPerfil = () => {
       avatarWrapper.appendChild(dot);
     } else if (!incompleto && dot) {
       dot.remove();
-    }
-  }
-  const dropdown = document.querySelector(".user-dropdown");
-  if (dropdown) {
-    let banner = dropdown.querySelector(".perfil-banner");
-    if (incompleto && !banner) {
-      banner = document.createElement("div");
-      banner.className = "perfil-banner";
-      banner.innerHTML = `<i class="fas fa-circle-info"></i><span>Completá tu perfil agregando teléfono y dirección para tener tu cuenta al día.</span>`;
-      dropdown.insertAdjacentElement("afterbegin", banner);
-    } else if (!incompleto && banner) {
-      banner.remove();
     }
   }
 };
@@ -46,8 +81,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (loginForm) {
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const loginError = document.getElementById("loginError");
-      loginError?.classList.add("hidden");
       formLoad(loginForm, true);
       try {
         const data = await apiFetch("/auth/login", {
@@ -63,13 +96,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         sessionStorage.setItem("justLoggedIn", "1");
         window.location.href = "dashboard.html";
       } catch (error) {
-        const isInvalidCredentials = /invalid login credentials|credenciales inválidas|email no confirmado/i.test(error.message || "");
-        const message = isInvalidCredentials ? "Contraseña o correo inválidos" : (error.message || "Contraseña o correo inválidos");
-        if (loginError) {
-          loginError.textContent = message;
-          loginError.classList.remove("hidden");
-        }
-        showToast(message, 4000, "error");
+        const isInvalidCreds = /invalid login credentials|credenciales inv[aá]lidas|email no confirmado/i.test(error.message || "");
+        const msg = isInvalidCreds ? "Contraseña o correo inválidos" : (error.message || "Credenciales incorrectas");
+        showToast(msg, 4000, "error");
         formLoad(loginForm, false);
       }
     });
@@ -103,47 +132,154 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Cargar movimientos
+  // Íconos semánticos por tipo de movimiento
+  const _movIconMap = (mov) => {
+    const tipo = (mov.tipo || "").toLowerCase();
+    const desc = (mov.descripcion || "").toLowerCase();
+    if (/recarga/.test(desc))                                            return { icon: "fa-mobile-alt",    bg: "mov-bg-indigo" };
+    if (/reserva/.test(desc))                                            return { icon: "fa-suitcase",       bg: "mov-bg-amber"  };
+    if (/transferencia_recibida/.test(tipo) || /recibida/.test(desc))    return { icon: "fa-arrow-down",    bg: "mov-bg-green"  };
+    if (/transferencia/.test(tipo) || /transferencia|enviada/.test(desc)) return { icon: "fa-paper-plane",  bg: "mov-bg-blue"   };
+    if (/conversion_entrada/.test(tipo) || /conversion/.test(desc))      return { icon: "fa-exchange-alt",  bg: "mov-bg-teal"   };
+    if (/deposito|credito/.test(tipo))                                   return { icon: "fa-circle-plus",   bg: "mov-bg-green"  };
+    if (/compra|pago/.test(desc))                                        return { icon: "fa-credit-card",   bg: "mov-bg-rose"   };
+    return { icon: "fa-minus", bg: "mov-bg-slate" };
+  };
+
+  const _renderMovRow = (mov, idx = 0) => {
+    const isIngreso = mov.tipo === "credito" || mov.tipo === "deposito"
+                   || mov.tipo === "transferencia_recibida" || mov.tipo === "conversion_entrada";
+    const { icon, bg } = _movIconMap(mov);
+    const monto  = Math.abs(mov.monto);
+    const fecha  = new Date(mov.fecha_movimiento).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "2-digit" });
+    const hora   = new Date(mov.fecha_movimiento).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    const desc   = (mov.descripcion || "Operación Nodo").replace(/^(Depósito|Deposito) ficticio$/i, "Depósito");
+    const bankBadge = mov.banco_nombre ? `<span class="mov-bank-badge">${mov.banco_nombre}</span>` : "";
+    const filtroClass = isIngreso ? "mov-ingreso" : "mov-egreso";
+    const delay = (idx * 0.07).toFixed(2);
+    return `
+      <li class="movement-item ${filtroClass} mov-animate" style="animation-delay:${delay}s" data-desc="${desc.toLowerCase()}" data-monto="${monto}">
+        <div class="mov-info">
+          <div class="mov-icon-wrap ${bg}"><i class="fas ${icon}"></i></div>
+          <div class="mov-text">
+            <span class="mov-desc">${desc}${bankBadge}</span>
+            <span class="mov-date">${fecha} · ${hora}</span>
+          </div>
+        </div>
+        <span class="mov-amount-v2 ${isIngreso ? "mov-amount-pos" : "mov-amount-neg"}"
+          data-final="${monto}"
+          data-prefix="${isIngreso ? "+" : "-"}"
+          data-currency="${mov.moneda === 'USD' ? 'U$D' : '$'}"
+          data-delay="${delay}">
+          ${isIngreso ? "+" : "-"}${mov.moneda === 'USD' ? 'U$D' : '$'}0,00
+        </span>
+      </li>`;
+  };
+
+  const _animateAmounts = () => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('#movimientosList .mov-amount-v2[data-final]').forEach(el => {
+      const final    = parseFloat(el.dataset.final);
+      const prefix   = el.dataset.prefix;
+      const currency = el.dataset.currency;
+      if (reduced) {
+        el.textContent = `${prefix}${currency}${final.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return;
+      }
+      const delayMs  = parseFloat(el.dataset.delay || '0') * 1000 + 120;
+      setTimeout(() => {
+        const dur = 700;
+        const t0  = performance.now();
+        const tick = (now) => {
+          const p = Math.min((now - t0) / dur, 1);
+          const e = 1 - Math.pow(1 - p, 3);
+          el.textContent = `${prefix}${currency}${(final * e).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }, delayMs);
+    });
+  };
+
+  let _movimientosCached = [];
+
+  const _applyFilters = () => {
+    const query  = (document.getElementById("actividadSearch")?.value || "").toLowerCase();
+    const active = document.querySelector(".actividad-filter.active")?.dataset.filter || "todos";
+    document.querySelectorAll("#movimientosList .movement-item").forEach(li => {
+      const desc   = li.dataset.desc || "";
+      const monto  = li.dataset.monto || "";
+      const matchQ = !query || desc.includes(query) || monto.includes(query);
+      const matchF = active === "todos"
+        || (active === "ingresos" && li.classList.contains("mov-ingreso"))
+        || (active === "egresos"  && li.classList.contains("mov-egreso"));
+      li.style.display = matchQ && matchF ? "" : "none";
+    });
+  };
+
+  document.getElementById("actividadSearch")?.addEventListener("input", _applyFilters);
+  document.querySelectorAll(".actividad-filter").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".actividad-filter").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      _applyFilters();
+    });
+  });
+
   if (loadMovimientosBtn) {
     loadMovimientosBtn.addEventListener("click", async () => {
-      btnLoad(loadMovimientosBtn, true);
+      const icon = loadMovimientosBtn.querySelector("i");
+      icon?.classList.add("spinning");
       try {
-        movimientosList.innerHTML = '<div class="loader">Cargando movimientos...</div>';
+        if (movimientosList) movimientosList.innerHTML = '<li class="mov-loading"><i class="fas fa-circle-notch fa-spin"></i> Cargando…</li>';
         const movimientos = await apiFetch("/movimientos");
+        _movimientosCached = movimientos;
         renderHeroMovimientos(movimientos);
         if (movimientosList) {
           if (movimientos.length === 0) {
-            movimientosList.innerHTML = '<li class="muted" style="text-align:center;padding:20px;">No hay movimientos recientes</li>';
+            movimientosList.innerHTML = '<li class="mov-empty">No hay movimientos recientes</li>';
             return;
           }
-          movimientosList.innerHTML = movimientos.map(mov => {
-            const isIngreso = mov.tipo === "credito" || mov.tipo === "deposito" || mov.tipo === "transferencia_recibida";
-            const icon   = isIngreso ? "fa-plus" : "fa-minus";
-            const iconBg = isIngreso ? "amount-positive" : "muted";
-            const bankBadge = mov.banco_nombre ? `<span class="mov-bank-badge">${mov.banco_nombre}</span>` : "";
-            return `
-              <li class="movement-item">
-                <div class="mov-info">
-                  <div class="mov-icon ${iconBg}"><i class="fas ${icon}"></i></div>
-                  <div class="mov-text">
-                    <b>${mov.descripcion || "Operación Nodo"}</b>
-                    <span>${new Date(mov.fecha_movimiento).toLocaleDateString()}${bankBadge}</span>
-                  </div>
-                </div>
-                <div class="mov-amount ${isIngreso ? "amount-positive" : ""}">${isIngreso ? "+" : ""}$${Math.abs(mov.monto).toLocaleString()}</div>
-              </li>`;
-          }).join("");
+          movimientosList.innerHTML = movimientos.map((m, i) => _renderMovRow(m, i)).join("");
+          _animateAmounts();
+          _applyFilters();
         }
         if (typeof setOutput === "function") setOutput(movimientos);
       } catch (error) {
         if (typeof setOutput === "function") setOutput(error.message);
       } finally {
-        btnLoad(loadMovimientosBtn, false);
+        setTimeout(() => icon?.classList.remove("spinning"), 600);
       }
     });
   }
 
   // Logout
   if (logoutBtn) logoutBtn.addEventListener("click", cerrarSesion);
+
+  // Dropdown: Completar perfil
+  document.getElementById("udropCompletarBtn")?.addEventListener("click", () => {
+    document.getElementById("editPerfilBtn")?.click();
+  });
+
+  // Dropdown: Copiar alias
+  document.getElementById("udropCopyAlias")?.addEventListener("click", () => {
+    const alias = document.getElementById("udropAliasVal")?.textContent || "";
+    if (alias && alias !== "—") {
+      navigator.clipboard.writeText(alias)
+        .then(() => showToast("Alias copiado", 2000, "success"))
+        .catch(() => showToast("No se pudo copiar", 2500, "error"));
+    }
+  });
+
+  // Dropdown: Cambiar alias (botón oculto de compatibilidad)
+  document.getElementById("editAliasDrop")?.addEventListener("click", () => {
+    document.getElementById("editAliasBtn")?.click();
+  });
+
+  // Dropdown: Editar alias inline (ícono de lápiz en fila de alias)
+  document.getElementById("udropEditAliasInline")?.addEventListener("click", () => {
+    document.getElementById("editAliasBtn")?.click();
+  });
 
   // Theme toggle
   document.querySelectorAll(".btn-theme-toggle").forEach(btn => btn.addEventListener("click", toggleTheme));

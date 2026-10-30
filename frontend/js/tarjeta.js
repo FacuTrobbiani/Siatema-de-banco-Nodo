@@ -1,4 +1,4 @@
-﻿const cargarTarjeta = async () => {
+const cargarTarjeta = async () => {
   try {
     const data = await apiFetch('/cards');
     const cards = data.cards || [];
@@ -36,7 +36,7 @@ const renderTarjeta = () => {
   const binEl  = document.getElementById('cardNumBin');
   const lastEl = document.getElementById('userCardLast4');
   if (binEl)  binEl.textContent  = panPrefix || '4539';
-  if (lastEl) lastEl.textContent = panLast   || 'â€¢â€¢â€¢â€¢';
+  if (lastEl) lastEl.textContent = panLast   || '••••';
 
   const expiryEl = document.getElementById('userCardExpiry');
   if (expiryEl) {
@@ -54,13 +54,13 @@ const renderTarjeta = () => {
     const mm = String(tarjetaActiva.expiry_month).padStart(2, '0');
     expiryD.textContent = `${mm}/${tarjetaActiva.expiry_year}`;
   }
-  if (limitEl) limitEl.textContent = `$${Number(tarjetaActiva.daily_limit).toLocaleString('es-AR')} / dÃ­a`;
+  if (limitEl) limitEl.textContent = `$${Number(tarjetaActiva.daily_limit).toLocaleString('es-AR')} / día`;
 
-  // CVV â€” siempre empieza oculto
+  // CVV — siempre empieza oculto
   const cvvEl = document.getElementById('cardDataCvv');
-  if (cvvEl) cvvEl.textContent = 'â€¢â€¢â€¢';
+  if (cvvEl) cvvEl.textContent = '•••';
 
-  // BotÃ³n bloquear / activar
+  // Botón bloquear / activar
   const toggleBtn = document.getElementById('toggleCardStatusBtn');
   if (toggleBtn) {
     const blocked = tarjetaActiva.status === 'blocked';
@@ -82,7 +82,10 @@ const cargarHistorialTarjeta = async (cardId) => {
     if (!list) return;
     const txs = data.transactions || [];
     if (txs.length === 0) {
-      list.innerHTML = '<li class="list-empty">Sin movimientos con tarjeta todavía</li>';
+      list.innerHTML = `<li class="card-tx-empty">
+        <i class="fas fa-receipt"></i>
+        <span>Sin movimientos con tarjeta todavía</span>
+      </li>`;
       return;
     }
     list.innerHTML = txs.map(tx => {

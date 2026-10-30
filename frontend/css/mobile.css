@@ -1,0 +1,374 @@
+/* ════════════════════════════════════════════════════
+   NODO — Mobile Overrides  (max-width: 720px)
+   Desktop: sin cambios. Todo dentro de @media.
+════════════════════════════════════════════════════ */
+
+@media (max-width: 720px) {
+
+  /* Evitar desborde horizontal global */
+  *, *::before, *::after { box-sizing: border-box !important; }
+  /* clip (no hidden): hidden convierte body en scroll container y iOS recorta la navbar fixed a su alto */
+  html, body { overflow-x: hidden !important; overflow-x: clip !important; max-width: 100vw !important; }
+  body { min-height: 100vh; min-height: 100dvh; }
+
+  /* Contenedores raíz: nunca más anchos que la pantalla */
+  .app-shell,
+  .app-body,
+  .content-area,
+  .content-section,
+  .card,
+  .balance-hero,
+  .balance-hero-body,
+  .card-collapsible,
+  .card-collapsible-body,
+  .card-header {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 8px 12px;
+    border-radius: var(--r);
+  }
+
+  .header-user {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  #userName { font-size: 0.82rem; }
+
+  /* Ocultar botón "Ayuda" para no saturar el header en mobile */
+  .btn-header-ayuda { display: none; }
+
+  /* ── Balance Hero ── */
+  .balance-hero {
+    padding: 16px 12px;
+    border-radius: var(--r-lg);
+    gap: 12px;
+  }
+
+  .hero-tab {
+    font-size: 0.7rem;
+    padding: 8px 6px;
+    gap: 4px;
+  }
+
+  .balance-amount-row { gap: 4px; }
+
+  .currency {
+    font-size: 1rem;
+    margin-top: 6px;
+  }
+
+  #displayBalance,
+  #usdDisplayBalance {
+    font-size: clamp(1.9rem, 9vw, 2.5rem);
+  }
+
+  /* CBU + Alias: columna en mobile */
+  .balance-account-info {
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .account-info-row {
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  .account-info-value { font-size: 0.7rem; }
+
+  /* Botones de acción: flex 3 columnas, última fila centrada (5 botones = 3+2) */
+  .balance-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+
+  .action-card {
+    flex: 0 0 calc(33.33% - 5.34px) !important;
+    min-width: 0;
+    padding: 12px 4px;
+    gap: 6px;
+    font-size: 0.72rem;
+    border-radius: 10px;
+  }
+
+  .action-card i { font-size: 1rem; flex-shrink: 0; }
+
+  /* USD actions: siempre 3 en fila */
+  .balance-actions-usd .action-card {
+    flex: 1;
+  }
+
+  /* ── USD promo banner ── */
+  .usd-promo-banner {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  /* ── Two-column cards → stack ── */
+  .two-col-cards {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;   /* flex-start en columna encogía las cards al ancho del contenido */
+  }
+
+  /* ── Cards generales ── */
+  .card {
+    padding: 16px 12px;
+    border-radius: var(--r-lg);
+  }
+
+  .card-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .card-header h2 { font-size: 0.88rem; }
+
+  /* .card { padding } de mobile pisaba el padding:0 de la card colapsable → doble marco */
+  .card.card-collapsible    { padding: 0 !important; }
+  .card-collapsible-trigger { padding: 14px 16px; border-radius: inherit; }
+  .card-collapsible-trigger[aria-expanded="true"] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .card-collapsible-body    { padding: 0 16px 16px; }
+
+  /* ── Actividad: montos no cortados ── */
+  .card-collapsible  { overflow: visible; }
+  .actividad-toolbar { flex-wrap: wrap; gap: 8px; }
+  .actividad-filters { flex-wrap: wrap; gap: 6px; }
+  .movement-item     { padding: 10px 0; overflow: hidden; }
+  .mov-amount-v2 {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 84px;       /* reserva espacio para que la animación no rompa el layout */
+    text-align: right;
+  }
+
+  /* ── Hero movimientos recientes ── */
+  .hero-mov-desc   { font-size: 0.7rem; }
+  .hero-mov-amount { font-size: 0.72rem; }
+  .hero-mov-icon   { width: 26px; height: 26px; }
+
+  /* ── Cotizaciones ── */
+  .cotiz-row { padding: 6px 8px; }
+  .cotiz-val { font-size: 0.75rem; }
+  .cotiz-label { font-size: 0.68rem; }
+
+  /* ── Mora banner ── */
+  .mora-banner {
+    font-size: 0.78rem;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── Modals ── */
+  .usd-modal-card {
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  .usd-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  /* ── Transferencias ── */
+  .transfer-form-grid { grid-template-columns: 1fr; }
+
+  /* ── Finanzas / Inversiones / Recargas: cards con menos padding ── */
+  #section-finanzas   .card,
+  #section-inversiones .card,
+  #section-recargas   .card,
+  #section-tarjetas   .card,
+  #section-prestamos  .card {
+    padding: 16px;
+  }
+
+  /* ── Tarjetas: botones principales y "Dar de baja" ── */
+  /* ui.css @media≤600px pone flex:1 1 100% en .btn-card-pay → se iba a segunda fila.
+     Usamos flex en el padre + flex:1 1 0% con !important para anularlo. */
+  .card-controls-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-top: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .btn-card-ctrl {
+    flex: 1 1 0% !important;   /* iguales: anula flex:1 1 calc(50%-4px) y flex:1 1 100% de ui.css */
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    padding: 8px 4px !important;
+    font-size: 0.68rem !important;
+    font-weight: 600 !important;
+    height: 38px !important;
+    min-height: unset !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+  .btn-card-ctrl i { font-size: 0.78rem !important; flex-shrink: 0 !important; }
+  /* "Dar de baja": texto rojo sutil, sin fondo pesado */
+  .card-data-baja-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #f87171 !important;
+    font-size: 0.78rem !important;
+    padding: 8px 12px !important;
+    margin-top: 4px !important;
+  }
+  .card-data-baja-wrap {
+    background: transparent !important;
+  }
+
+  /* ── Tarjeta 3D: en mobile aplana perspectiva para que ocupe el ancho completo ── */
+  .dashboard-card-3d {
+    transform: perspective(900px) rotateX(2deg) rotateY(0deg) !important;
+    max-width: 100% !important;
+  }
+  .dashboard-card-3d:hover {
+    transform: perspective(900px) rotateX(0deg) rotateY(3deg) !important;
+  }
+
+  /* ── Tabla de movimientos en tarjeta: horizontal scroll ── */
+  .tarjeta-movimientos-table,
+  .inv-lista,
+  .recarga-form-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── App shell: menos padding horizontal en mobile (layout.css tiene 12px, lo bajamos a 8px) ── */
+  .app-shell { gap: 10px; padding-left: 8px !important; padding-right: 8px !important; }
+
+  /* iPhone/Android: la barra de estado translúcida no debe tapar el header */
+  .app-shell { padding-top: calc(env(safe-area-inset-top, 0px) + 12px) !important; }
+
+  /* Reserva para la navbar fija inferior (+ zona segura inferior del iPhone) */
+  .content-area { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+
+  /* ── Network canvas de fondo del dashboard: ajustar ── */
+  .dash-network { opacity: 0.3; }
+
+  /* ── Dropdown de perfil: centrado en pantalla ── */
+  .user-dropdown {
+    position: fixed !important;
+    top: 64px !important;
+    left: 50% !important;
+    right: auto !important;
+    width: min(90vw, 310px) !important;
+    max-height: 72vh !important;
+    overflow-y: auto !important;
+    transform: translateX(-50%) translateY(-6px) scale(.97) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  /* Solo .open controla el dropdown en mobile (no :hover ni :focus-within) */
+  .user-menu:hover .user-dropdown,
+  .user-menu:focus-within .user-dropdown {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateX(-50%) translateY(-6px) scale(.97) !important;
+  }
+  .user-menu.open .user-dropdown {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) translateY(0) scale(1) !important;
+  }
+
+  /* ── Avatar: tamaño fijo + sin cámara accidental en header ── */
+  .avatar-circle {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    flex-shrink: 0;
+  }
+  .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Ocultar botón cámara en el header (evita tap accidental al abrir dropdown) */
+  .header .avatar-edit-btn { display: none !important; }
+
+  /* Mostrar chevron en mobile con área táctil generosa */
+  .user-chevron {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem !important;
+    padding: 6px 4px 6px 8px;
+    color: var(--text-3);
+  }
+
+  /* Todo el trigger es clickeable */
+  .user-trigger { cursor: pointer !important; gap: 8px !important; }
+
+  /* ── Bot flotante: por encima de la bottom nav ── */
+  .ai-assistant { bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important; right: 14px !important; }
+
+  /* Modales centrados (ui.css los dejaba como hoja inferior pegada al borde) */
+  .modal,
+  .usd-modal-overlay { align-items: center !important; padding: 16px !important; }
+  .transfer-modal-card,
+  .usd-modal-card,
+  .receipt-card {
+    border-radius: var(--r-xl) !important;
+    max-height: calc(100dvh - 32px) !important;
+    overflow-y: auto;
+  }
+  .ai-window    { bottom: 58px !important; }
+
+  /* ── Bottom nav: texto no desborda ── */
+  .sidebar-nav-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    display: block;
+  }
+}
+
+/* ── Teléfonos pequeños (≤ 430px) ── */
+@media (max-width: 430px) {
+  .balance-hero { padding: 14px 12px; }
+
+  #displayBalance,
+  #usdDisplayBalance { font-size: clamp(1.6rem, 10vw, 2rem); }
+
+  .action-card {
+    flex: 0 1 calc(33.33% - 5px);
+    font-size: 0.75rem;
+    padding: 10px 2px;
+  }
+
+  .action-card i { font-size: 0.9rem; flex-shrink: 0; }
+
+  .card { padding: 14px; }
+
+  .sidebar-nav-item { font-size: 0.75rem; gap: 2px; }
+  .sidebar-nav-item i { font-size: 1.1rem; }
+
+  .header { padding: 6px 10px; }
+
+  .account-info-label { font-size: 0.75rem; }
+  .account-info-value { font-size: 0.75rem; }
+}

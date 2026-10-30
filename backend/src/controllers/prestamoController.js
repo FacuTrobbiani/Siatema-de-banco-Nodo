@@ -1,13 +1,13 @@
 const db = require('../config/db');
+const { getTNAPrestamo } = require('./inversionesController');
 
-const TNA = 0.95;
-const MONTO_MIN = 10000;
-const MONTO_MAX = 5000000;
+const MONTO_MIN    = 10000;
+const MONTO_MAX    = 5000000;
 const PLAZOS_VALIDOS = [3, 6, 12, 24, 36];
 const IVA = 0.21;
 
-function calcularCuota(monto, cuotas) {
-  const r = TNA / 12;
+function calcularCuota(monto, cuotas, tna) {
+  const r = tna / 12;
   return monto * (r * Math.pow(1 + r, cuotas)) / (Math.pow(1 + r, cuotas) - 1);
 }
 
@@ -45,20 +45,22 @@ const solicitarPrestamo = async (req, res) => {
     return res.status(400).json({ message: 'Plazo inválido. Opciones: 3, 6, 12, 24 o 36 meses.' });
   }
 
-  const cuota_mensual = calcularCuota(montoNum, cuotasNum);
+  const tna = await getTNAPrestamo();
+  const cuota_mensual = calcularCuota(montoNum, cuotasNum, tna);
   const client = await db.getClient();
 
   try {
     await client.query('BEGIN');
 
-    // Verificar que no haya préstamo activo
+    // Verificar que el capital total activo + nuevo monto no supere el límite global
     const { rows: activos } = await client.query(
-      "SELECT id FROM prestamos WHERE usuario_id = $1 AND estado = 'activo'",
+      "SELECT monto FROM prestamos WHERE usuario_id = $1 AND estado = 'activo'",
       [req.user.id]
     );
-    if (activos.length > 0) {
+    const capitalActivo = activos.reduce((s, p) => s + Number(p.monto), 0);
+    if (capitalActivo + montoNum > MONTO_MAX) {
       await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Ya tenés un préstamo activo. Cancelalo antes de solicitar uno nuevo.' });
+      return res.status(400).json({ message: `El monto supera tu límite disponible. Capital activo: $${capitalActivo.toLocaleString('es-AR')}. Disponible: $${(MONTO_MAX - capitalActivo).toLocaleString('es-AR')}.` });
     }
 
     // Cuenta ARS
@@ -82,7 +84,7 @@ const solicitarPrestamo = async (req, res) => {
       `INSERT INTO prestamos (usuario_id, cuenta_acreditada_id, monto, cuotas, tna, cuota_mensual, estado, cuotas_pagadas, fecha_proximo_vencimiento)
        VALUES ($1, $2, $3, $4, $5, $6, 'activo', 0, $7)
        RETURNING *`,
-      [req.user.id, cuenta.id, montoNum, cuotasNum, TNA, cuota_mensual, primerVenc]
+      [req.user.id, cuenta.id, montoNum, cuotasNum, tna, cuota_mensual, primerVenc]
     );
 
     await client.query(
